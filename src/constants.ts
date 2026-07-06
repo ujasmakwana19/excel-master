@@ -4,6 +4,6 @@ export const GridConstants = {
 }
 
 export const Defaults = {
-    ROW : 100,
-    COLUMN : 100
+    ROW : 50,
+    COLUMN : 50
 }
