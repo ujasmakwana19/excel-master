@@ -1,6 +1,6 @@
 import { Defaults, GridConstants } from "./constants.js";
 import fs from 'fs';
-// Ujas
+
 class Main {
     _canvas: HTMLCanvasElement;
     constructor(canvas: HTMLCanvasElement) {
