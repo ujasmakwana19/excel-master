@@ -1,5 +1,6 @@
 import { Defaults, GridConstants } from "./constants.js";
-import fs from 'fs';
+import { GridStateClass } from "./Grid/GridState.js";
+
 
 class Main {
     _canvas: HTMLCanvasElement;
@@ -23,6 +24,7 @@ class Main {
 class Grid {
     _canvas: HTMLCanvasElement;
     _ctx: CanvasRenderingContext2D;
+    _gridState : GridStateClass
 
     private scrollX: number = 0;
     private scrollY: number = 0;
@@ -30,16 +32,25 @@ class Grid {
     cellWidth: number = GridConstants.WIDTH;
     cellHeight: number = GridConstants.HEIGHT;
 
+    totalWidth : number = 0
+    totalHeight : number = 0
+
     rowNo: number = Defaults.ROW;
     columnNo: number = Defaults.COLUMN;
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this._canvas = canvas;
         this._ctx = ctx;
+        this._gridState = new GridStateClass()
         this.drawInitGrid();
+
     }
     
-    private drawInitGrid() {
+    private async drawInitGrid() {
+        // await this._gridState.initGridData()
+        this.totalWidth = this._gridState.calCulateTotalWidth()
+        this.totalHeight = this._gridState.calCulateTotalHeight()
+
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         window.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
@@ -85,17 +96,56 @@ class Grid {
         const dataStartRow = Math.max(1, startRow);
         const dataStartCol = Math.max(1, startCol);
 
+        let tempHeight : number = this._gridState._rowDataCache[dataStartRow]?.height
+        let absoluteY : number = this.cellHeight;
+        
+        if(tempHeight !== undefined)
+            absoluteY = tempHeight;
+        
+            
         for (let r = dataStartRow; r < endRow; r++) {
+            let absoluteX = this.cellWidth;
             for (let c = dataStartCol; c < endCol; c++) {
-                const absoluteX = c * this.cellWidth;
-                const absoluteY = r * this.cellHeight;
+
 
                 const screenX = absoluteX - this.scrollX;
                 const screenY = absoluteY - this.scrollY;
 
-                this.drawCell(r, c, screenX, screenY, false);
+                let temp = this._gridState._colDataCache[c];
+                let tempWidth : number = this.cellWidth
+                if(temp !== undefined && 
+                    temp?.width !== undefined
+                ){
+                    
+                    absoluteX = absoluteX + temp.width
+                    tempWidth = temp.width
+                }
+                else{
+                    absoluteX += this.cellWidth
+                    tempWidth = this.cellWidth
+                }
+
+                this.drawCell(r, c, screenX, screenY, false, tempWidth, tempHeight);
+                
+                
             }
+
+            let temp = this._gridState._rowDataCache[r+1];
+
+            if(temp !== undefined && 
+                temp?.height !== undefined
+            ){
+
+                absoluteY = absoluteY + temp.height
+                tempHeight = temp.height
+            }
+            else{
+                absoluteY += this.cellHeight
+                tempHeight = this.cellHeight
+            }
+
         }
+
         this._ctx.restore();
 
         // Freeze the top row of columns
@@ -104,9 +154,24 @@ class Grid {
         this._ctx.rect(this.cellWidth, 0, this._canvas.width, this.cellHeight);
         this._ctx.clip();
 
+        let lastCellWidthEnd : number = this.cellWidth
         for (let c = dataStartCol; c < endCol; c++) {
-            const screenX = (c * this.cellWidth) - this.scrollX;
-            this.drawCell(0, c, screenX, 0, true);
+            
+            const screenX = lastCellWidthEnd - this.scrollX;
+            let temp = this._gridState._colDataCache[c];
+            let tempWidth : number = this.cellWidth
+                if(temp !== undefined && 
+                    temp?.width !== undefined
+                ){
+                    
+                    lastCellWidthEnd = lastCellWidthEnd + temp.width
+                    tempWidth = temp.width
+                }
+                else{
+                    lastCellWidthEnd += this.cellWidth
+                    tempWidth = this.cellWidth
+                }
+            this.drawCell(0, c, screenX, 0, true, tempWidth);
         }
         this._ctx.restore();
 
@@ -115,10 +180,24 @@ class Grid {
         this._ctx.beginPath();
         this._ctx.rect(0, this.cellHeight, this.cellWidth, this._canvas.height);
         this._ctx.clip();
-
+        let lastCellHeightEnd : number = this.cellHeight
         for (let r = dataStartRow; r < endRow; r++) {
-            const screenY = (r * this.cellHeight) - this.scrollY;
-            this.drawCell(r, 0, 0, screenY, true);
+
+            const screenY = lastCellHeightEnd - this.scrollY;
+            let temp = this._gridState._rowDataCache[r];
+            let tempHeight : number = this.cellHeight
+                if(temp !== undefined && 
+                    temp?.height !== undefined
+                ){
+                    
+                    lastCellHeightEnd = lastCellHeightEnd + temp.height
+                    tempHeight = temp.height
+                }
+                else{
+                    lastCellHeightEnd += this.cellHeight
+                    tempHeight = this.cellHeight
+                }
+            this.drawCell(r, 0, 0, screenY, true, this.cellWidth, tempHeight);
         }
         this._ctx.restore();
 
@@ -126,18 +205,19 @@ class Grid {
         this.drawCell(0, 0, 0, 0, true);
     }
 
-    private drawCell(row: number, col: number, x: number, y: number, isHeader: boolean = false) {
+    private drawCell(row: number, col: number, x: number, y: number, isHeader: boolean = false,  specificWidth : number = this.cellWidth, specificHeight : number = this.cellHeight ) {
         if (isHeader) {
             // Excel-style gray background headers
             this._ctx.fillStyle = '#f8f9fa'; 
-            this._ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+            this._ctx.fillRect(x, y, specificWidth, specificHeight);
             
             this._ctx.strokeStyle = '#b0b3b8';
-            this._ctx.lineWidth = 1;
-            this._ctx.strokeRect(x, y, this.cellWidth, this.cellHeight);
+            this._ctx.lineWidth = 2;
+            this._ctx.strokeRect(x, y, specificWidth, specificHeight);
             
             this._ctx.fillStyle = '#444444';
-            this._ctx.font = 'bold 11px sans-serif';
+            let val : string = "bold " + "13px " + "sans-serif"
+            this._ctx.font = val;
             this._ctx.textAlign = 'center';
             this._ctx.textBaseline = 'middle';
 
@@ -150,22 +230,22 @@ class Grid {
                 headerText = row.toString(); 
             }
 
-            this._ctx.fillText(headerText, x + this.cellWidth / 2, y + this.cellHeight / 2);
+            this._ctx.fillText(headerText, x + specificWidth / 2, y + specificHeight / 2);
         } else {
             // Standard data grid cells
             this._ctx.fillStyle = '#ffffff';
-            this._ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+            this._ctx.fillRect(x, y, specificWidth, specificHeight);
 
             this._ctx.strokeStyle = '#e2e3e5';
             this._ctx.lineWidth = 1;
-            this._ctx.strokeRect(x, y, this.cellWidth, this.cellHeight);
+            this._ctx.strokeRect(x, y, specificWidth, specificHeight);
             
             this._ctx.fillStyle = '#1a1a1a';
             this._ctx.font = '13px sans-serif';
             this._ctx.textAlign = 'center';
             this._ctx.textBaseline = 'middle';
             
-            this._ctx.fillText(`R${row} C${col}`, x + this.cellWidth / 2, y + this.cellHeight / 2);
+            this._ctx.fillText(`R${row} C${col}`, x + specificWidth / 2, y + specificHeight / 2);
         }
     }
 
@@ -190,8 +270,8 @@ class Grid {
         let targetY = this.scrollY + event.deltaY;
 
         // Apply global map limitations 
-        const maxScrollX = Math.max(0, (this.columnNo * this.cellWidth) - this._canvas.width);
-        const maxScrollY = Math.max(0, (this.rowNo * this.cellHeight) - this._canvas.height);
+        const maxScrollX = Math.max(0, (this.totalWidth) - this._canvas.width);
+        const maxScrollY = Math.max(0, (this.totalHeight) - this._canvas.height);
 
         targetX = Math.min(Math.max(0, targetX), maxScrollX);
         targetY = Math.min(Math.max(0, targetY), maxScrollY);
