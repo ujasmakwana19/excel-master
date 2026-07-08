@@ -1,5 +1,5 @@
 
-import { GridConstants } from "../constants.js"
+import { Defaults, GridConstants } from "../constants.js"
 import { DefaultGridProperties, type PaintProperties } from "./PaintProperties.js"
 
 export type RowData = {
@@ -10,9 +10,10 @@ export type RowData = {
 }
 
 export class Row {
+    totalHeight : number = GridConstants.HEIGHT
     _rowDataCache : RowData = {
         1 : {
-            height : 100
+            height : 90
         },
         2 : {
             height : 200
@@ -41,6 +42,20 @@ export class Row {
             }
         }
 
+    }
+
+    calCulateTotalHeight(): number {
+        const rowCount = Object.keys(this._rowDataCache).length;
+        const remainingRows = Defaults.ROW - rowCount;
+
+        let sum = 0;
+        for (const key in this._rowDataCache) {
+            if (!Object.hasOwn(this._rowDataCache, key)) continue;
+            sum += this._rowDataCache[key]?.height ?? 0;
+        }
+
+        this.totalHeight = remainingRows * GridConstants.HEIGHT + sum;
+        return this.totalHeight;
     }
 
 }

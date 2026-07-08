@@ -4,6 +4,10 @@ export const GridConstants = {
     HEIGHT : 25
 }
 
+export const LeftHeaderConstants = {
+    WIDTH : 60
+}
+
 export const Defaults = {
     ROW : 50,
     COLUMN : 50
