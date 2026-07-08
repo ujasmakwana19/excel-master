@@ -1,5 +1,6 @@
 
-import { type PaintProperties } from "./PaintProperties.js"
+import { GridConstants } from "../constants.js"
+import { DefaultGridProperties, type PaintProperties } from "./PaintProperties.js"
 
 export type ColumnData = {
     [key : number] : {
@@ -9,40 +10,36 @@ export type ColumnData = {
 }
 
 
-// export class Column {
-//     _colDataCache : ColumnData = {}
-//     // _fileInstance : FileState
+export class Column {
+    _colDataCache : ColumnData = {
+        1 : {
+            width : 100
+        },
+        2 : {
+            width : 200
+        },
+    }
+    
+    get getData() : ColumnData {
+        return this._colDataCache
+    }
 
-//     // constructor(){
-//     //     // this._fileInstance = new FileState()
-//     // }
+    setProperties(
+        key : number , 
+        width : number , 
+        properties : PaintProperties
+    ) : void
+    {
+        if(JSON.stringify(properties) 
+            !== 
+        JSON.stringify(DefaultGridProperties) || width !== GridConstants.WIDTH){
+            this._colDataCache[key] = {
+                width : width,
+                properties : properties
+            }
 
-//     public async initialize(): Promise<void> {
-//             const temp = await this._fileInstance.readJsonFile<ColumnData>(DB.COLUMN);
-//             if (temp) this._colDataCache = temp;
-//         }
+        }
 
-//     get getData() : ColumnData {
-//         return this._colDataCache
-//     }
+    }
 
-//     setProperties(
-//         key : number , 
-//         width : number , 
-//         properties : PaintProperties
-//     ) : void
-//     {
-//         if(JSON.stringify(properties) 
-//             !== 
-//         JSON.stringify(DefaultGridProperties) || width !== GridConstants.WIDTH){
-//             this._colDataCache[key] = {
-//                 width : width,
-//                 properties : properties
-//             }
-
-//             this._fileInstance.writeJsonFile<ColumnData>(DB.COLUMN, this._colDataCache)
-//         }
-
-//     }
-
-// }
+}

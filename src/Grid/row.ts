@@ -1,5 +1,6 @@
 
-import { type PaintProperties } from "./PaintProperties.js"
+import { GridConstants } from "../constants.js"
+import { DefaultGridProperties, type PaintProperties } from "./PaintProperties.js"
 
 export type RowData = {
     [key : number] : {
@@ -8,48 +9,38 @@ export type RowData = {
     }
 }
 
+export class Row {
+    _rowDataCache : RowData = {
+        1 : {
+            height : 100
+        },
+        2 : {
+            height : 200
+        },
+    }
 
-// export class Row {
-//     _rowDataCache : RowData = {}
-//     _fileInstance : FileState
+    get getData() : RowData {
+        return this._rowDataCache
+    }
 
-//     constructor(){
-//         this._fileInstance = new FileState()
-//     }
+    setProperties(
+        key : number , 
+        height : number , 
+        properties : PaintProperties
+    ) : void
+    {
+        if(JSON.stringify(properties) 
+            !== 
+        JSON.stringify(
+            DefaultGridProperties) || 
+            height !== GridConstants.HEIGHT
+        ){
+            this._rowDataCache[key] = {
+                height : height,
+                properties : properties
+            }
+        }
 
-//     public async initialize(): Promise<void> {
-//         const temp = await this._fileInstance.readJsonFile<RowData>(DB.ROW);
-//         if (temp) this._rowDataCache = temp;
-//     }
+    }
 
-//     get getData() : RowData {
-//         return this._rowDataCache
-//     }
-
-//     setProperties(
-//         key : number , 
-//         height : number , 
-//         properties : PaintProperties
-//     ) : void
-//     {
-//         if(JSON.stringify(properties) 
-//             !== 
-//         JSON.stringify(
-//             DefaultGridProperties) || 
-//             height !== GridConstants.HEIGHT
-//         ){
-            
-//             this._rowDataCache[key] = {
-//                 height : height,
-//                 properties : properties
-//             }
-
-//             this._fileInstance.writeJsonFile<RowData>(
-//                 DB.ROW, 
-//                 this._rowDataCache
-//             )
-//         }
-
-//     }
-
-// }
+}

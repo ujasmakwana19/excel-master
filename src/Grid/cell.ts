@@ -1,58 +1,45 @@
-import {  type PaintProperties } from "./PaintProperties.js"
+import {  DefaultGridProperties, type PaintProperties } from "./PaintProperties.js"
 
 export type CellData = {
     [key : string] : {
         text : string 
-        properties : PaintProperties
+        properties? : PaintProperties
     }
 }
 
-// export class Cell {
-//     _cellDataCache : CellData = {}
-//     _fileInstance : FileState
+export class Cell {
+    _cellDataCache : CellData = {}
 
-//     constructor(){
-//         this._fileInstance = new FileState()
-        
-//     }
+    get getData() : CellData {
+        return this._cellDataCache
+    }
 
-//     public async initialize(): Promise<void> {
-//         const temp = await this._fileInstance.readJsonFile<CellData>(DB.CELL);
-//         if (temp) this._cellDataCache = temp;
-//     }
+    setProperties(
+        row : number , 
+        col : number , 
+        text : string , 
+        properties : PaintProperties
+    ) : void
+    {
+        if(
+            JSON.stringify(properties) 
+            !== 
+            JSON.stringify(DefaultGridProperties) 
+            || text !== undefined 
+            || text !== ""
+        ){
+            this._cellDataCache[this.cellId(row, col)] = {
+                text : text,
+                properties : properties
+            }
 
+        }
 
-//     get getData() : CellData {
-//         return this._cellDataCache
-//     }
+    }
 
-//     setProperties(
-//         row : number , 
-//         col : number , 
-//         text : string , 
-//         properties : PaintProperties
-//     ) : void
-//     {
-//         if(
-//             JSON.stringify(properties) 
-//             !== 
-//             JSON.stringify(DefaultGridProperties) 
-//             || text !== undefined 
-//             || text !== ""
-//         ){
-//             this._cellDataCache[this.cellId(row, col)] = {
-//                 text : text,
-//                 properties : properties
-//             }
+    public cellId(row : number, col : number) : string 
+    {
+        return `${row}` + `:` + `${col}`
+    }
 
-//             this._fileInstance.writeJsonFile<CellData>(DB.CELL, this._cellDataCache)
-//         }
-
-//     }
-
-//     public cellId(row : number, col : number) : string 
-//     {
-//         return `${row}` + `:` + `${col}`
-//     }
-
-// }
+}

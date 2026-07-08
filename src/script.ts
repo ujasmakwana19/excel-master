@@ -47,7 +47,6 @@ class Grid {
     }
     
     private async drawInitGrid() {
-        // await this._gridState.initGridData()
         this.totalWidth = this._gridState.calCulateTotalWidth()
         this.totalHeight = this._gridState.calCulateTotalHeight()
 

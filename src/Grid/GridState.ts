@@ -1,94 +1,61 @@
 import { Defaults, GridConstants } from "../constants.js";
-import { type CellData } from "./cell.js";
-import { type ColumnData } from "./column.js";
-import { type RowData } from "./row.js";
+import { Cell, type CellData } from "./cell.js";
+import { Column, type ColumnData } from "./column.js";
+import { Row, type RowData } from "./row.js";
 
-interface GridState {
+export class GridStateClass {
+    private rowObj: Row;
+    private colObj: Column;
+    private cellObj: Cell;
 
-}
+    totalHeight: number = 0;
+    totalWidth: number = 0;
 
-export class GridStateClass implements GridState {
-    // rowObj : Row
-    // colObj : Column
-    // cellObj : Cell
+    _cellDataCache: CellData = {};
+    _colDataCache: ColumnData = {};
+    _rowDataCache: RowData = {};
 
-    totalHeight : number = 0
-    totalWidth : number = 0
-
-    _cellDataCache : CellData = {}
-    _colDataCache : ColumnData = {
-        1 : {
-            width : 100
-        },
-        2 : {
-            width : 200
-        }
-    }
-    _rowDataCache : RowData = {
-        1 : {
-            height : 100
-        },
-        2 : {
-            height : 200
-        }
+    constructor() {
+        this.rowObj = new Row();
+        this.colObj = new Column();
+        this.cellObj = new Cell();
     }
 
-    // constructor(){
-        // this.rowObj = new Row()
-        // this.colObj = new Column()
-        // this.cellObj = new Cell()
-    // }
+    async initGridData(dataUrl: string): Promise<void> {
 
-    // async initGridData() : Promise<void> {
+        
+        this._cellDataCache = this.cellObj.getData;
+        this._colDataCache = this.colObj.getData;
+        this._rowDataCache = this.rowObj.getData;
 
-    //     // await this.rowObj.initialize()
-    //     // await this.colObj.initialize()
-    //     // await this.cellObj.initialize()
+    }
 
-    //     // this._colDataCache = this.colObj.getData
-    //     // this._rowDataCache = this.rowObj.getData
-    //     // this._cellDataCache = this.cellObj.getData
-    // }
+    calCulateTotalWidth(): number {
+        const colCount = Object.keys(this._colDataCache).length;
+        const remainingCols = Defaults.COLUMN - colCount;
 
-    calCulateTotalWidth() : number{
-        const remainingCols = Defaults.COLUMN - Object.keys(this._colDataCache).length
         console.log(remainingCols)
-
-        let sum : number = 0
+        let sum = 0;
         for (const key in this._colDataCache) {
             if (!Object.hasOwn(this._colDataCache, key)) continue;
-
-            if(this._colDataCache[key] !== undefined)
-                sum += this._colDataCache[key]?.width;
-            
-            
+            sum += this._colDataCache[key]?.width ?? 0;
         }
 
-        this.totalWidth = remainingCols * GridConstants.WIDTH + sum
-        
-        console.log(this.totalWidth)
-        return this.totalWidth
-       
+        this.totalWidth = remainingCols * GridConstants.WIDTH + sum;
+        return this.totalWidth;
     }
 
-    calCulateTotalHeight() : number{
-        const remainingRows = Defaults.ROW - Object.keys(this._rowDataCache).length
-        console.log(remainingRows)
-        let sum : number = 0
+    calCulateTotalHeight(): number {
+        const rowCount = Object.keys(this._rowDataCache).length;
+        const remainingRows = Defaults.ROW - rowCount;
+
+        let sum = 0;
         for (const key in this._rowDataCache) {
             if (!Object.hasOwn(this._rowDataCache, key)) continue;
-
-            if(this._rowDataCache[key] !== undefined)
-                sum += this._rowDataCache[key]?.height;
-            
-            
+            sum += this._rowDataCache[key]?.height ?? 0;
         }
 
-        this.totalHeight = remainingRows * GridConstants.HEIGHT + sum
-        console.log(this.totalHeight)
-        return this.totalHeight
+        this.totalHeight = remainingRows * GridConstants.HEIGHT + sum;
+        return this.totalHeight;
     }
-
-
-
 }
