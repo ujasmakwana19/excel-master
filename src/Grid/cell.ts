@@ -6,22 +6,37 @@ import {
 export type CellData = {
 	[key: string]: {
 		text: string;
-		properties?: PaintProperties;
+		properties?: PaintProperties | undefined
 	};
 };
 
 export class Cell {
-	_cellDataCache: CellData = {};
+	_cellDataCache: CellData = {
+		'1-1' : {
+			"text" : "Ram"
+		},
+		'1-2' : {
+			"text" : "Deep"
+		}
+	};
 
-	get getData(): CellData {
+	get getCells() {
 		return this._cellDataCache;
+	}
+
+	getData(
+		row: number,
+		col: number
+	) : {text : string , properties? : PaintProperties | undefined} | undefined{
+
+		return this._cellDataCache?.[this.cellId(row, col)];
 	}
 
 	setProperties(
 		row: number,
 		col: number,
 		text: string,
-		properties: PaintProperties,
+		properties?: PaintProperties,
 	): void {
 		if (
 			JSON.stringify(properties) !==
@@ -37,6 +52,6 @@ export class Cell {
 	}
 
 	public cellId(row: number, col: number): string {
-		return `${row}` + `:` + `${col}`;
+		return `${row}` + `-` + `${col}`;
 	}
 }

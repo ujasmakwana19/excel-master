@@ -1,4 +1,4 @@
-import { Defaults, GridConstants } from "../constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
@@ -7,7 +7,7 @@ import {
 export type RowData = {
 	[key: number]: {
 		height: number;
-		properties?: PaintProperties;
+		properties?: PaintProperties | undefined
 	};
 };
 
@@ -26,10 +26,17 @@ export class Row {
 		return this._rowDataCache;
 	}
 
+	getRow(
+		row: number
+	) : {height : number , properties? : PaintProperties | undefined} | undefined{
+
+		return this._rowDataCache?.[row];
+	}
+
 	setProperties(
 		key: number,
 		height: number,
-		properties: PaintProperties,
+		properties?: PaintProperties,
 	): void {
 		if (
 			JSON.stringify(properties) !==
@@ -45,7 +52,7 @@ export class Row {
 
 	calCulateTotalHeight(): number {
 		const rowCount = Object.keys(this._rowDataCache).length;
-		const remainingRows = Defaults.ROW - rowCount;
+		const remainingRows = Defaults.ROW - rowCount - 1;
 
 		let sum = 0;
 		for (const key in this._rowDataCache) {
@@ -53,7 +60,7 @@ export class Row {
 			sum += this._rowDataCache[key]?.height ?? 0;
 		}
 
-		this.totalHeight = remainingRows * GridConstants.HEIGHT + sum;
+		this.totalHeight = remainingRows * GridConstants.HEIGHT + sum + HeaderConstants.TOPHEIGHT;
 		return this.totalHeight;
 	}
 }

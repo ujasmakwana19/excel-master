@@ -3,11 +3,18 @@ export const GridConstants = {
 	HEIGHT: 25,
 };
 
-export const LeftHeaderConstants = {
-	WIDTH: 60,
+export const HeaderConstants = {
+	LEFTWIDTH: 60,
+	TOPHEIGHT: 23
 };
 
 export const Defaults = {
 	ROW: 50,
 	COLUMN: 50,
 };
+
+export const thresHoldConstants = {
+	resizeHitTolerance : 4,
+	minWidth : 30,
+	minHeight : 25
+} 

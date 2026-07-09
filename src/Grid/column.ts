@@ -1,4 +1,4 @@
-import { Defaults, GridConstants, LeftHeaderConstants } from "../constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
@@ -19,11 +19,18 @@ export class Column {
 		},
 		2: {
 			width: 200,
-		},
+		}
 	};
 
 	get getData(): ColumnData {
 		return this._colDataCache;
+	}
+
+	getCol(
+		col: number
+	) : {width : number , properties? : PaintProperties | undefined} | undefined{
+
+		return this._colDataCache?.[col];
 	}
 
 	setProperties(
@@ -56,6 +63,6 @@ export class Column {
 		}
 
 		this.totalWidth = remainingCols * GridConstants.WIDTH + sum;
-		return this.totalWidth + LeftHeaderConstants.WIDTH;
+		return this.totalWidth + HeaderConstants.LEFTWIDTH;
 	}
 }

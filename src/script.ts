@@ -1,3 +1,4 @@
+import { HandleLoadJsonData } from "./EventListener/htmlEventListener.js";
 import { Grid } from "./Grid.js";
 
 class Main {
@@ -32,5 +33,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     const paintContext: CanvasRenderingContext2D = new Main(canvas).get2DContext;
-    const gridBuilder = new Grid(canvas, paintContext);
+    const gridBuilder : Grid = new Grid(canvas, paintContext);
+
+	HandleLoadJsonData()
 });

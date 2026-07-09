@@ -1,39 +1,39 @@
 export type PaintProperties = {
-	backgroundcolor: string | undefined;
+	backgroundcolor: string ;
 
-	bordercolor: string | undefined;
-	borderwidth: number | undefined;
+	bordercolor: string ;
+	borderwidth: number ;
 
-	textalign: "left" | "center" | "middle";
+	textalign: "left" | "center" | "right";
 
-	fontcolor: string | undefined;
-	fontweight: "bold" | "" | undefined;
-	fontstyle: string | undefined;
-	fontsize: string | undefined;
+	fontcolor: string ;
+	fontweight: "bold" | "" ;
+	fontstyle: string ;
+	fontsize: string ;
 };
 
 export const DefaultGridProperties: PaintProperties = {
 	backgroundcolor: "#ffffff",
-	bordercolor: "#e2e3e5",
-	borderwidth: 1.5,
+    bordercolor: "#e4e4e7", // Ultra-clean, subtle gray (Zinc 200)
+    borderwidth: 1,
 
-	textalign: "left",
+    textalign: "center",
 
-	fontcolor: "#000000",
-	fontweight: "",
-	fontstyle: "sans-serif",
-	fontsize: "14px",
+    fontcolor: "#09090b", // Deep ink black/charcoal
+    fontweight: "",
+    fontstyle: "Inter, system-ui, sans-serif",
+    fontsize: "14px",
 };
 
 export const HeaderDefaultGridProperties: PaintProperties = {
-	backgroundcolor: "#f8f9fa",
-	bordercolor: "#b0b3b8",
-	borderwidth: 2,
+	backgroundcolor: "#8d928f", // Soft off-white header zone
+    bordercolor: "#000000", // High-energy emerald green border
+    borderwidth: 2,
 
-	textalign: "center",
+    textalign: "center",
 
-	fontcolor: "#444444",
-	fontweight: "bold",
-	fontstyle: "sans-serif",
-	fontsize: "16px",
+    fontcolor: "#09090b",
+    fontweight: "bold",
+    fontstyle: "Inter, system-ui, sans-serif",
+    fontsize: "14px",
 };

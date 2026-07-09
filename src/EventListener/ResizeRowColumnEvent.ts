@@ -1,90 +1,116 @@
+import { thresHoldConstants } from "../constants.js";
 import type { Grid } from "../Grid.js";
 import type { RenderingEngine } from "../RenderingEngine.js";
 
-export  class ResizeRowColumnEvent {
-    private isResizing: boolean = false;
-    private resizeColIndex: number = -1;
-    private resizeStartX: number = 0;
-    private resizeStartWidth: number = 0;
-    private resizeHitTolerance: number = 4;
-    
+export class ResizeRowColumnEvent {
+  _grid : Grid
+  isResizing: boolean = false;
 
-    getColAtX(_canvas : HTMLCanvasElement, _grid : Grid, _renderingEngine : RenderingEngine, scrollX : number , mouseX: number): { colIndex: number; borderX: number } {
-        // If inside row-label domain, ignore
-        if (mouseX < _grid.leftHeaderWidth) return { colIndex: -1, borderX: -1 };
+  private resizeColIndex: number = -1;
+  private resizeStartX: number = 0;
+  private resizeStartWidth: number = 0;
 
-        const { startCol, endCol } = _renderingEngine.getColBounds(scrollX, _canvas.width);
-        
-        // Find absolute coordinates of the visible column starting position
-        let currentAbsoluteX = _grid.leftHeaderWidth;
-        for (let c = 1; c < startCol; c++) {
-            currentAbsoluteX += _grid._colState._colDataCache?.[c]?.width ?? _grid.cellWidth;
-        }
+  private resizeRowIndex: number = -1;
+  private resizeStartY: number = 0;
+  private resizeStartHeight: number = 0;
 
-        for (let c = startCol; c <= endCol; c++) {
-            const colWidth = _grid._colState._colDataCache?.[c]?.width ?? _grid.cellWidth;
-            const colRightScreenX = currentAbsoluteX + colWidth - scrollX ;
+  private readonly resizeHitTolerance: number = thresHoldConstants.resizeHitTolerance;
+  private readonly minWidth: number = thresHoldConstants.minWidth;
+  private readonly minHeight: number = thresHoldConstants.minHeight;
 
-            // Check if mouse is hovering within tolerance range of the right border
-            if (Math.abs(mouseX - colRightScreenX) <= this.resizeHitTolerance) {
-                return { colIndex: c, borderX: colRightScreenX };
-            }
-            currentAbsoluteX += colWidth;
-        }
+  constructor(grid : Grid){
+    this._grid = grid
+  }
+  
 
-        return { colIndex: -1, borderX: -1 };
+  handleMouseDown(
+    event: MouseEvent,
+  ) {
+    const rect = this._grid._canvas.getBoundingClientRect();
+
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // 1. Column Resizing Interaction (Only in Top Header)
+    if (mouseY <= this._grid.topHeaderHeight) {
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, this.resizeHitTolerance);
+      if (colIndex !== -1) {
+        this.isResizing = true;
+        this.resizeColIndex = colIndex;
+        this.resizeStartX = event.clientX;
+        this.resizeStartWidth = this._grid._colState._colDataCache?.[colIndex]?.width ?? this._grid.cellWidth;
+        event.preventDefault();
+        return; // Early return to avoid cross-triggers
+      }
     }
 
-    handleMouseDown(_canvas : HTMLCanvasElement, _grid : Grid, _renderingEngine : RenderingEngine, scrollX : number , event: MouseEvent) {
-        const rect = _canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
+    // 2. Row Resizing Interaction (Only in Left Header)
+    if (mouseX <= this._grid.leftHeaderWidth) {
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, this.resizeHitTolerance);
+      if (rowIndex !== -1) {
+        this.isResizing = true;
+        this.resizeRowIndex = rowIndex;
+        this.resizeStartY = event.clientY;
+        this.resizeStartHeight = this._grid._rowState._rowDataCache?.[rowIndex]?.height ?? this._grid.cellHeight;
+        event.preventDefault();
+      }
+    }
+  }
 
-        // Resizing is only valid inside the top header row
-        if (mouseY <= _grid.cellHeight) {
-            const { colIndex } = this.getColAtX(_canvas, _grid, _renderingEngine, scrollX, mouseX);
-            if (colIndex !== -1) {
-                this.isResizing = true;
-                this.resizeColIndex = colIndex;
-                this.resizeStartX = event.clientX;
-                this.resizeStartWidth = _grid._colState._colDataCache?.[colIndex]?.width ?? _grid.cellWidth;
-                event.preventDefault();
-            }
-        }
+  handleMouseMove(
+    _canvas: HTMLCanvasElement,
+    _grid: Grid,
+    _renderingEngine: RenderingEngine,
+    event: MouseEvent
+  ) {
+    // Case 1: Active Dragging / Resizing State
+    if (this.isResizing) {
+      if (this.resizeColIndex !== -1) {
+        const deltaX = event.clientX - this.resizeStartX;
+        const newWidth = Math.max(this.minWidth, this.resizeStartWidth + deltaX);
+        _grid._colState.setProperties(this.resizeColIndex, newWidth);
+        _grid.render();
+      } else if (this.resizeRowIndex !== -1) {
+        const deltaY = event.clientY - this.resizeStartY;
+        const newHeight = Math.max(this.minHeight, this.resizeStartHeight + deltaY);
+        _grid._rowState.setProperties(this.resizeRowIndex, newHeight);
+        _grid.render();
+      }
+      return; 
     }
 
-    handleMouseMove(_canvas : HTMLCanvasElement, _grid : Grid, _renderingEngine : RenderingEngine, scrollX : number ,event: MouseEvent) {
-        const rect = _canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
+    // Case 2: Hover State (Dynamic cursor styling using an early-exit structure)
+    const rect = _canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
-        if (this.isResizing) {
-            // Track displacement delta distance
-            const deltaX = event.clientX - this.resizeStartX;
-            // Restrict minimum column size to 30px
-            const newWidth = Math.max(30, this.resizeStartWidth + deltaX);
-
-            // Update column state cache dynamically 
-            _grid._colState.setProperties(this.resizeColIndex, newWidth);
-            _grid.render();
-            return;
-        }
-
-        // Dynamic Cursor styling over boundaries
-        if (mouseY <= _grid.cellHeight) {
-            const { colIndex } = this.getColAtX(_canvas, _grid, _renderingEngine, scrollX, mouseX);
-            _canvas.style.cursor = colIndex !== -1 ? 'col-resize' : 'default';
-        } else {
-            _canvas.style.cursor = 'default';
-        }
+    // Check columns first (Top Header Zone)
+    if (mouseY <= _grid.topHeaderHeight) {
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, this.resizeHitTolerance);
+      if (colIndex !== -1) {
+        _canvas.style.cursor = "col-resize";
+        return;
+      }
     }
 
-     handleMouseUp() {
-        if (this.isResizing) {
-            this.isResizing = false;
-            this.resizeColIndex = -1;
-        }
+    // Check rows second (Left Header Zone) - FIXED: passing mouseY instead of mouseX
+    if (mouseX <= _grid.leftHeaderWidth) { 
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, this.resizeHitTolerance);
+      if (rowIndex !== -1) {
+        _canvas.style.cursor = "row-resize";
+        return;
+      }
+    } 
 
-    
+    // Fallback default
+    _canvas.style.cursor = "default";
+  }
+
+  handleMouseUp() {
+    if (this.isResizing) {
+      this.isResizing = false;
+      this.resizeColIndex = -1;
+      this.resizeRowIndex = -1;
     }
+  }
 }

@@ -1,30 +1,25 @@
+import type { Grid } from "./Grid.js";
+import { DefaultGridProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
+
 export class PaintEngine {
+	_grid : Grid
+
+	constructor(grid : Grid){
+		this._grid = grid
+	}
+
 	drawCell(
 		_ctx: CanvasRenderingContext2D,
-		row: number,
-		col: number,
-		x: number,
-		y: number,
+		row: number, // x index
+		col: number, // y index
+		x: number, // X - px coordinate 
+		y: number, // Y - px coordinate
+		
 		isHeader: boolean = false,
 		specificWidth: number,
 		specificHeight: number,
 	) {
 		if (isHeader) {
-			// Excel-style gray background headers
-			_ctx.fillStyle = "#f8f9fa";
-
-			_ctx.fillRect(x, y, specificWidth, specificHeight);
-
-			_ctx.strokeStyle = "#b0b3b8";
-			_ctx.lineWidth = 2;
-			_ctx.strokeRect(x, y, specificWidth, specificHeight);
-
-			_ctx.fillStyle = "#444444";
-			let val: string = "bold " + "13px " + "sans-serif";
-			_ctx.font = val;
-			_ctx.textAlign = "center";
-			_ctx.textBaseline = "middle";
-
 			let headerText = "";
 			if (row === 0 && col === 0) {
 				headerText = "";
@@ -34,33 +29,75 @@ export class PaintEngine {
 				headerText = row.toString();
 			}
 
-			_ctx.fillText(
-				headerText,
-				x + specificWidth / 2,
-				y + specificHeight / 2,
-			);
+			this.paintPropertiesOfCells(
+					_ctx,
+					x,
+					y,
+					specificWidth,
+					specificHeight,
+					HeaderDefaultGridProperties,
+					headerText
+				)
+			
 		} else {
-			// Standard data grid cells
-			_ctx.fillStyle = "#ffffff";
-			_ctx.fillRect(x, y, specificWidth, specificHeight);
-
-			_ctx.strokeStyle = "#e2e3e5";
-			_ctx.lineWidth = 1;
-			_ctx.strokeRect(x, y, specificWidth, specificHeight);
-
-			_ctx.fillStyle = "#1a1a1a";
-			_ctx.font = "13px sans-serif";
-			_ctx.textAlign = "center";
-			_ctx.textBaseline = "middle";
-
-			_ctx.fillText(
-				`R${row} C${col}`,
-				x + specificWidth / 2,
-				y + specificHeight / 2,
-			);
+			const cell = this._grid._cellState.getData(row, col)
+			
+			console.log(cell);
+			
+			
+				this.paintPropertiesOfCells(
+					_ctx,
+					x,
+					y,
+					specificWidth,
+					specificHeight,
+					DefaultGridProperties,
+					cell?.text,
+					cell?.properties
+				)
+			
 		}
 	}
 
+	private paintPropertiesOfCells(
+		_ctx : CanvasRenderingContext2D,
+		x : number,
+		y : number,
+		specificWidth : number,
+		specificHeight : number,
+		DefaultGridProperty : PaintProperties,
+		text? :string, 
+		properties? : PaintProperties ,
+	){
+		_ctx.fillStyle = properties?.backgroundcolor ?? DefaultGridProperty.backgroundcolor;
+
+		_ctx.fillRect(x, y, specificWidth, specificHeight);
+
+		_ctx.strokeStyle = properties?.bordercolor ?? DefaultGridProperty.bordercolor;
+
+		_ctx.lineWidth = properties?.borderwidth ??
+		DefaultGridProperty.borderwidth
+
+		_ctx.strokeRect(x, y, specificWidth, specificHeight);
+
+		_ctx.fillStyle = properties?.fontcolor ??
+		DefaultGridProperty.fontcolor;
+
+		const fontValue : string = `${properties?.fontweight ?? DefaultGridProperty.fontweight} ` + `${properties?.fontsize ?? DefaultGridProperty.fontsize} `+ `${properties?.fontstyle ?? DefaultGridProperty.fontstyle}`
+		
+		_ctx.font = fontValue
+		_ctx.textAlign = properties?.textalign ?? DefaultGridProperty.textalign;
+
+		_ctx.textBaseline = "middle";
+
+		_ctx.fillText(
+				text ?? "",
+				x + specificWidth / 2,
+				y + specificHeight / 2,
+			);
+	}
+
+	// To make the column as the A, B, C, AB, ...
 	private getColLabel(colIndex: number): string {
 		let label = "";
 		let temp = colIndex;
