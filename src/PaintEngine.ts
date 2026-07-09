@@ -1,5 +1,5 @@
 import type { Grid } from "./Grid.js";
-import { DefaultGridProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
+import { DarkGridProperties, DarkHeaderProperties, DefaultGridProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
 
 export class PaintEngine {
 	_grid : Grid
@@ -35,15 +35,12 @@ export class PaintEngine {
 					y,
 					specificWidth,
 					specificHeight,
-					HeaderDefaultGridProperties,
+					this._grid.darkMode ? DarkHeaderProperties : HeaderDefaultGridProperties,
 					headerText
 				)
 			
 		} else {
 			const cell = this._grid._cellState.getData(row, col)
-			
-			console.log(cell);
-			
 			
 				this.paintPropertiesOfCells(
 					_ctx,
@@ -51,7 +48,7 @@ export class PaintEngine {
 					y,
 					specificWidth,
 					specificHeight,
-					DefaultGridProperties,
+					this._grid.darkMode ? DarkGridProperties : DefaultGridProperties,
 					cell?.text,
 					cell?.properties
 				)

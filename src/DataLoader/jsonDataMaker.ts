@@ -1,6 +1,6 @@
 import fs from 'fs/promises'; 
 
-type RandomData = {
+export type RandomData = {
     id: number;
     firstName: string;
     lastName: string;

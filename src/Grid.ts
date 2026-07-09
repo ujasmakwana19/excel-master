@@ -48,6 +48,8 @@ export class Grid {
 
   selectedColIndex: number = -1;
 
+  darkMode : boolean = false;
+
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this._canvas = canvas;
     this._ctx = ctx;

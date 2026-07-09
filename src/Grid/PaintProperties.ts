@@ -14,26 +14,80 @@ export type PaintProperties = {
 
 export const DefaultGridProperties: PaintProperties = {
 	backgroundcolor: "#ffffff",
-    bordercolor: "#e4e4e7", // Ultra-clean, subtle gray (Zinc 200)
-    borderwidth: 1,
+	bordercolor: "#e1e3e6",
+	borderwidth: 1,
 
-    textalign: "center",
+	textalign: "center",
 
-    fontcolor: "#09090b", // Deep ink black/charcoal
-    fontweight: "",
-    fontstyle: "Inter, system-ui, sans-serif",
-    fontsize: "14px",
+	fontcolor: "#202124",
+	fontweight: "",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
 };
 
 export const HeaderDefaultGridProperties: PaintProperties = {
-	backgroundcolor: "#8d928f", // Soft off-white header zone
-    bordercolor: "#000000", // High-energy emerald green border
-    borderwidth: 2,
+	backgroundcolor: "#f8f9fa",
+	bordercolor: "#c0c0c0",
+	borderwidth: 1,
 
-    textalign: "center",
+	textalign: "center",
 
-    fontcolor: "#09090b",
-    fontweight: "bold",
-    fontstyle: "Inter, system-ui, sans-serif",
-    fontsize: "14px",
+	fontcolor: "#444746",
+	fontweight: "bold",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
+};
+
+export const DarkGridProperties: PaintProperties = {
+	backgroundcolor: "#202124",
+	bordercolor: "#3c4043",
+	borderwidth: 1,
+
+	textalign: "center",
+
+	fontcolor: "#e8eaed",
+	fontweight: "",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
+};
+
+export const DarkHeaderProperties: PaintProperties = {
+	backgroundcolor: "#303134",
+	bordercolor: "#5f6368",
+	borderwidth: 1,
+
+	textalign: "center",
+
+	fontcolor: "#e8eaed",
+	fontweight: "bold",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
+};
+
+// Bonus — Sheets' active-cell outline. Useful since your footer
+// already computes range/sum/avg/count from a selection.
+export const SelectedCellLightProperties: PaintProperties = {
+	backgroundcolor: "#e8f0fe",   // Sheets' selection fill
+	bordercolor: "#1a73e8",       // Sheets' selection outline blue
+	borderwidth: 2,
+
+	textalign: "center",
+
+	fontcolor: "#202124",
+	fontweight: "",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
+};
+
+export const SelectedCellDarkProperties: PaintProperties = {
+	backgroundcolor: "#28313f",   // dimmed blue-gray fill
+	bordercolor: "#8ab4f8",       // Google's dark-mode blue accent
+	borderwidth: 2,
+
+	textalign: "center",
+
+	fontcolor: "#e8eaed",
+	fontweight: "",
+	fontstyle: "Arial, sans-serif",
+	fontsize: "14px",
 };

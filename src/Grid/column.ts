@@ -55,7 +55,7 @@ export class Column {
 		const colCount = Object.keys(this._colDataCache).length;
 		const remainingCols = Defaults.COLUMN - colCount - 1;
 
-		console.log(remainingCols);
+		// console.log(remainingCols);
 		let sum = 0;
 		for (const key in this._colDataCache) {
 			if (!Object.hasOwn(this._colDataCache, key)) continue;

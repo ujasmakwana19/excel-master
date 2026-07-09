@@ -21,8 +21,8 @@ export class RenderingEngine {
     const { startRow, totalY, endRow } = this._grid._canvasMaths.getRowBounds();
     const { startCol, totalX, endCol } = this._grid._canvasMaths.getColBounds();
 
-    console.log({ startRow, totalY, endRow });
-    console.log({ startCol, totalX, endCol });
+    // console.log({ startRow, totalY, endRow });
+    // console.log({ startCol, totalX, endCol });
     // Take the snapshot of the current state of the canvas
     this._grid._ctx.save();
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -7,19 +7,48 @@
     <title>TypeScript Canvas</title>
     <style>
         /* ----------------------------------------------------
-           1. Core Reset & Layout Structure
+           Theme tokens — mirrors PaintProperties light/dark sets
         ---------------------------------------------------- */
+        :root {
+            --chrome-bg: #2b2b2b;
+            --chrome-border: #444;
+            --chrome-text: #ddd;
+            --chrome-text-muted: #999;
+            --input-bg: #3a3a3a;
+            --input-border: #555;
+            --grid-bg: #202124;       /* matches DarkGridProperties.backgroundcolor */
+            --toggle-bg: #3a3a3a;
+            --toggle-border: #666;
+            --toggle-text: #f0c419;   /* moon/sun accent when active in dark */
+        }
+
+        html[data-theme="light"] {
+            --chrome-bg: #f8f9fa;      /* matches HeaderDefaultGridProperties.backgroundcolor */
+            --chrome-border: #c0c0c0;
+            --chrome-text: #202124;
+            --chrome-text-muted: #5f6368;
+            --input-bg: #ffffff;
+            --input-border: #c0c0c0;
+            --grid-bg: #ffffff;       /* matches DefaultGridProperties.backgroundcolor */
+            --toggle-bg: #ffffff;
+            --toggle-border: #c0c0c0;
+            --toggle-text: #444746;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Prevent total browser scrolling */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #121212; /* Darker backdrop so layout boundaries are crisp */
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
 
-        /* Screen Wrapper splitting layout vertically */
+        body {
+            background-color: var(--chrome-bg);
+            color: var(--chrome-text);
+        }
+
         .app-layout {
             display: flex;
             flex-direction: column;
@@ -28,31 +57,113 @@
         }
 
         /* ----------------------------------------------------
-           2. Component Regions (Header, Content, Footer)
+           Header / toolbar
         ---------------------------------------------------- */
         .app-header {
-            background-color: #f8f9fa;
-            padding: 8px 16px;
-            border-bottom: 1px solid #dcdfe6;
-            z-index: 10; 
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            background-color: var(--chrome-bg);
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--chrome-border);
         }
 
-        /* CRITICAL FOR CANVAS INDEPENDENCE: 
-          Forces container to remain precisely bounded by the space between header and footer.
-        */
+        .nav-controls {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-group {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding-right: 16px;
+            border-right: 1px solid var(--chrome-border);
+        }
+        .ctrl-group:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .field label {
+            font-size: 11px;
+            color: var(--chrome-text-muted);
+            white-space: nowrap;
+        }
+
+        .nav-controls select,
+        .nav-controls input[type="number"],
+        .nav-controls button {
+            height: 28px;
+            padding: 0 8px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--chrome-text);
+            font-size: 13px;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        .nav-controls input[type="color"] {
+            width: 32px;
+            height: 28px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            padding: 2px;
+            border-radius: 3px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        #font-size { width: 55px; }
+        #row-offset { width: 65px; }
+
+        /* Dark-mode toggle: visibly changes with the theme it controls */
+        #theme-toggle {
+            background-color: var(--toggle-bg);
+            border-color: var(--toggle-border);
+            color: var(--toggle-text);
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #theme-toggle:hover {
+            filter: brightness(1.15);
+        }
+
+        #load-data-btn {
+            background-color: #1a73e8;
+            border-color: #1a73e8;
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #load-data-btn:hover {
+            background-color: #1765cc;
+        }
+
+        #json-upload {
+            font-size: 12px;
+            color: var(--chrome-text-muted);
+            max-width: 140px;
+        }
+
+        /* ----------------------------------------------------
+           Canvas area — untouched positioning logic
+        ---------------------------------------------------- */
         .app-content {
-            flex: 1; 
+            flex: 1;
             position: relative;
             width: 100%;
             height: 100%;
-            overflow: hidden; 
-            background-color: #ffffff; /* Clean slate for canvas rendering */
+            overflow: hidden;
+            background-color: var(--grid-bg);
         }
 
-        /* Canvas sits perfectly over its parent context, 
-          letting TypeScript freely manage width/height calculations.
-        */
         #myCanvas {
             position: absolute;
             top: 0;
@@ -60,105 +171,27 @@
             display: block;
         }
 
-        .app-footer {
-            background-color: #f8f9fa;
-            padding: 8px 16px;
-            border-top: 1px solid #dcdfe6;
-            font-size: 0.85rem;
-            color: #4a4a4a;
-            z-index: 10;
-        }
-
         /* ----------------------------------------------------
-           3. Inner UI Toolbar Styling
+           Footer
         ---------------------------------------------------- */
-        .nav-controls {
+        .app-footer {
+            background-color: var(--chrome-bg);
+            padding: 0 14px;
+            border-top: 1px solid var(--chrome-border);
+            font-size: 12px;
+            color: var(--chrome-text-muted);
+            height: 28px;
             display: flex;
             align-items: center;
-            gap: 12px; /* Uniform horizontal item distribution */
-            flex-wrap: wrap; /* Gracefully wraps controls on narrow screens */
         }
 
-        /* Unified Form Sizing */
-        .nav-controls select,
-        .nav-controls input[type="number"],
-        .nav-controls button {
-            height: 32px;
-            padding: 0 8px;
-            border: 1px solid #dcdfe6;
-            border-radius: 4px;
-            background-color: #ffffff;
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        .nav-controls select:focus,
-        .nav-controls input[type="number"]:focus {
-            border-color: #409eff;
-        }
-
-        /* Color Picker Uniformity */
-        .nav-controls input[type="color"] {
-            width: 36px;
-            height: 32px;
-            border: 1px solid #dcdfe6;
-            border-radius: 4px;
-            padding: 2px;
-            cursor: pointer;
-            background: none;
-            box-sizing: border-box;
-        }
-
-        /* Standardize Number Input Layout widths */
-        #font-size { width: 55px; }
-        #row-offset { width: 75px; }
-
-        /* Typography & Custom Label configurations */
-        .nav-label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #606266;
-            margin-right: -4px; /* Pulls label tightly to its respective input */
-        }
-
-        /* Button Styling variants */
-        #theme-toggle {
-            cursor: pointer;
-            color: #606266;
-        }
-        #theme-toggle:hover {
-            background-color: #f0f2f5;
-        }
-
-        #load-data-btn {
-            background-color: #409eff;
-            color: #ffffff;
-            border-color: #409eff;
-            font-weight: 600;
-            padding: 0 16px;
-            cursor: pointer;
-        }
-        #load-data-btn:hover {
-            background-color: #66b1ff;
-            border-color: #66b1ff;
-        }
-
-        /* File input specific spacing alignment overrides */
-        #json-upload {
-            font-size: 0.85rem;
-            color: #606266;
-        }
-
-        /* Metrics layout */
         .metrics-display {
             display: flex;
-            gap: 16px;
-            align-items: center;
+            gap: 18px;
         }
+
         .metrics-display strong {
-            color: #2c3e50;
+            color: var(--chrome-text);
         }
     </style>
 </head>
@@ -167,23 +200,54 @@
     <div class="app-layout">
         <nav class="app-header">
             <div class="nav-controls">
-                <select id="font-family">
-                    <option value="Arial">Arial</option>
-                    <option value="Courier New">Courier New</option>
-                </select>
-                
-                <input type="number" id="font-size" value="14" min="10" max="30">
-                
-                <input type="color" id="font-color" value="#000000" title="Font Color">
-                <input type="color" id="bg-color" value="#ffffff" title="Background Color">
-                
-                <button id="theme-toggle">Dark Mode</button>
-                
-                <label for="row-offset" class="nav-label">Row Offset:</label>
-                <input type="number" id="row-offset" value="1" min="1" placeholder="1">
-                <input type="file" id="json-upload" accept=".json">
 
-                <button id="load-data-btn">Load Data</button>
+                <div class="ctrl-group">
+                    <div class="field">
+                        <label for="font-family">Font</label>
+                        <select id="font-family">
+                            <option value="Arial">Arial</option>
+                            <option value="Courier New">Courier New</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="font-size">Size</label>
+                        <input type="number" id="font-size" value="14" min="10" max="30">
+                    </div>
+                </div>
+
+                <div class="ctrl-group">
+                    <div class="field">
+                        <label for="font-color">Font Color</label>
+                        <input type="color" id="font-color" value="#000000" title="Font Color">
+                    </div>
+                    <div class="field">
+                        <label for="bg-color">Background Color</label>
+                        <input type="color" id="bg-color" value="#ffffff" title="Background Color">
+                    </div>
+                </div>
+
+                <div class="ctrl-group">
+                    <div class="field">
+                        <label for="row-offset">Row Offset</label>
+                        <input type="number" id="row-offset" value="1" min="1" placeholder="1">
+                    </div>
+                    <div class="field">
+                        <label for="json-upload">Import JSON</label>
+                        <input type="file" id="json-upload" accept=".json">
+                    </div>
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <button id="load-data-btn">Load Data</button>
+                    </div>
+                </div>
+
+                <div class="ctrl-group" style="border-right:none; padding-right:0; margin-left:auto;">
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <button id="theme-toggle">Dark Mode</button>
+                    </div>
+                </div>
+
             </div>
         </nav>
 
@@ -193,9 +257,9 @@
 
         <footer class="app-footer">
             <div class="metrics-display">
-                <span>Selected Range: <strong id="metric-range">None</strong></span> | 
-                <span>Sum: <strong id="metric-sum">0</strong></span> | 
-                <span>Avg: <strong id="metric-avg">0</strong></span> | 
+                <span>Selected Range: <strong id="metric-range">None</strong></span>
+                <span>Sum: <strong id="metric-sum">0</strong></span>
+                <span>Avg: <strong id="metric-avg">0</strong></span>
                 <span>Count: <strong id="metric-count">0</strong></span>
             </div>
         </footer>

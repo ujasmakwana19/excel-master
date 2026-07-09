@@ -9,7 +9,7 @@ export const HeaderConstants = {
 };
 
 export const Defaults = {
-	ROW: 50,
+	ROW: 100000,
 	COLUMN: 50,
 };
 
