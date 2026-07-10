@@ -6,30 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TypeScript Canvas</title>
     <style>
-        /* ----------------------------------------------------
-           Theme tokens — mirrors PaintProperties light/dark sets
-        ---------------------------------------------------- */
-        :root {
+       
             --chrome-bg: #2b2b2b;
             --chrome-border: #444;
             --chrome-text: #ddd;
             --chrome-text-muted: #999;
             --input-bg: #3a3a3a;
             --input-border: #555;
-            --grid-bg: #202124;       /* matches DarkGridProperties.backgroundcolor */
+            --grid-bg: #202124;      
             --toggle-bg: #3a3a3a;
             --toggle-border: #666;
-            --toggle-text: #f0c419;   /* moon/sun accent when active in dark */
+            --toggle-text: #f0c419; 
         }
 
         html[data-theme="light"] {
-            --chrome-bg: #f8f9fa;      /* matches HeaderDefaultGridProperties.backgroundcolor */
+            --chrome-bg: #f8f9fa;     
             --chrome-border: #c0c0c0;
             --chrome-text: #202124;
             --chrome-text-muted: #5f6368;
             --input-bg: #ffffff;
             --input-border: #c0c0c0;
-            --grid-bg: #ffffff;       /* matches DefaultGridProperties.backgroundcolor */
+            --grid-bg: #ffffff;     
             --toggle-bg: #ffffff;
             --toggle-border: #c0c0c0;
             --toggle-text: #444746;
@@ -56,9 +53,7 @@
             width: 100vw;
         }
 
-        /* ----------------------------------------------------
-           Header / toolbar
-        ---------------------------------------------------- */
+       
         .app-header {
             background-color: var(--chrome-bg);
             padding: 8px 14px;
@@ -123,7 +118,7 @@
         #font-size { width: 55px; }
         #row-offset { width: 65px; }
 
-        /* Dark-mode toggle: visibly changes with the theme it controls */
+        
         #theme-toggle {
             background-color: var(--toggle-bg);
             border-color: var(--toggle-border);
@@ -152,9 +147,7 @@
             max-width: 140px;
         }
 
-        /* ----------------------------------------------------
-           Canvas area — untouched positioning logic
-        ---------------------------------------------------- */
+        
         .app-content {
             flex: 1;
             position: relative;
@@ -171,9 +164,7 @@
             display: block;
         }
 
-        /* ----------------------------------------------------
-           Footer
-        ---------------------------------------------------- */
+       
         .app-footer {
             background-color: var(--chrome-bg);
             padding: 0 14px;
