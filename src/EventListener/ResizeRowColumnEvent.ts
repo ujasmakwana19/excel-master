@@ -14,7 +14,7 @@ export class ResizeRowColumnEvent {
   private resizeStartY: number = 0;
   private resizeStartHeight: number = 0;
 
-  private readonly resizeHitTolerance: number = thresHoldConstants.resizeHitTolerance;
+  
   private readonly minWidth: number = thresHoldConstants.minWidth;
   private readonly minHeight: number = thresHoldConstants.minHeight;
 
@@ -31,22 +31,26 @@ export class ResizeRowColumnEvent {
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
-    // 1. Column Resizing Interaction (Only in Top Header)
+
     if (mouseY <= this._grid.topHeaderHeight) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, this.resizeHitTolerance);
+      
+      // Col Resizing Interaction
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, true);
+
       if (colIndex !== -1) {
         this.isResizing = true;
         this.resizeColIndex = colIndex;
         this.resizeStartX = event.clientX;
         this.resizeStartWidth = this._grid._colState._colDataCache?.[colIndex]?.width ?? this._grid.cellWidth;
+
         event.preventDefault();
         return; // Early return to avoid cross-triggers
       }
     }
 
-    // 2. Row Resizing Interaction (Only in Left Header)
+    // Row Resizing Interaction
     if (mouseX <= this._grid.leftHeaderWidth) {
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, this.resizeHitTolerance);
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, true);
       if (rowIndex !== -1) {
         this.isResizing = true;
         this.resizeRowIndex = rowIndex;
@@ -79,23 +83,23 @@ export class ResizeRowColumnEvent {
       return; 
     }
 
-    // Case 2: Hover State (Dynamic cursor styling using an early-exit structure)
+    // Hover State (cursor styling)
     const rect = _canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
     // Check columns first (Top Header Zone)
     if (mouseY <= _grid.topHeaderHeight) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, this.resizeHitTolerance);
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX,  true);
       if (colIndex !== -1) {
         _canvas.style.cursor = "col-resize";
         return;
       }
     }
 
-    // Check rows second (Left Header Zone) - FIXED: passing mouseY instead of mouseX
+    // Check rows second (Left Header Zone) 
     if (mouseX <= _grid.leftHeaderWidth) { 
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, this.resizeHitTolerance);
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, true);
       if (rowIndex !== -1) {
         _canvas.style.cursor = "row-resize";
         return;

@@ -10,11 +10,12 @@ export const HeaderConstants = {
 
 export const Defaults = {
 	ROW: 100000,
-	COLUMN: 500,
+	COLUMN: 50,
 };
 
 export const thresHoldConstants = {
 	resizeHitTolerance : 4,
+	selectionHitTolerance : 2,
 	minWidth : 30,
 	minHeight : 25
 } 

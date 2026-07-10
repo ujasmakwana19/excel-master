@@ -1,8 +1,11 @@
+import { thresHoldConstants } from "./constants.js";
 import type { Grid } from "./Grid.js";
-
 
 export class CanvasMaths {
   _grid: Grid;
+  
+  private readonly resizeHitTolerance: number = thresHoldConstants.resizeHitTolerance;
+  private readonly selectionHitTolerance: number = thresHoldConstants.selectionHitTolerance;
 
   constructor(grid: Grid) {
     this._grid = grid;
@@ -13,6 +16,7 @@ export class CanvasMaths {
   // ==========================================
   // To calculate the dynamic value of the startRow, endRow such that the change in the size ,
   // of the row is taken in account
+  // totalY is the total height from the top till startRow
 
   getRowBounds() {
     // total pixel from the top
@@ -37,11 +41,12 @@ export class CanvasMaths {
     }
 
     // To calculate the end Row
-    let visibleY = totalY - this._grid.scrollY; // totalY (heiht in pixel) - scrolled pixel
+    let visibleY = totalY - this._grid.scrollY; // totalY (height in pixel) - scrolled pixel
 
     for (let r = startRow; r <= this._grid.rowNo; r++) {
       const rowHeight =
-        this._grid._rowState._rowDataCache?.[r]?.height ?? this._grid.cellHeight;
+        this._grid._rowState._rowDataCache?.[r]?.height ??
+        this._grid.cellHeight;
       visibleY += rowHeight;
       endRow = r;
 
@@ -56,6 +61,7 @@ export class CanvasMaths {
 
   // To calculate the dynamic value of the startCol, endCol such that the change in the size ,
   // of the Col is taken in account
+  // totalX is the total width from the left till first col
   getColBounds() {
     // Total pixel from the left
     let totalX = 0;
@@ -91,55 +97,73 @@ export class CanvasMaths {
     }
 
     // we do this cause , if its init , then the size of the Header to add otherwise the
-    //  column column would cut down
+    //  column would cut down
     return { startCol, totalX: totalX + this._grid.leftHeaderWidth, endCol };
   }
 
   getColAtX(
-      mouseX: number,
-      resizeHitTolerance : number
-    ): { colIndex: number; borderX: number } {
-      // Prevent interaction if mouse is inside the top-left corner intersecting block
-      if (mouseX < this._grid.leftHeaderWidth) return { colIndex: -1, borderX: -1 };
+    mouseX: number,
+    borderClick : boolean,
+  ): { colIndex: number, borderX: number,  X : number}   {
+
+    if (mouseX < this._grid.leftHeaderWidth)
+      return { colIndex: -1, borderX: -1, X : -1 };
+
+    const { startCol, totalX, endCol } = this.getColBounds();
+    console.log({ startCol, totalX, endCol });
   
-      const { startCol, totalX, endCol } = this.getColBounds();
-      
-      let widthTillStartCol = totalX;
-  
-      for (let c = startCol; c <= endCol; c++) {
-        const colWidth = this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
-        const colRightScreenX = widthTillStartCol + colWidth - this._grid.scrollX;
-  
-        if (Math.abs(mouseX - colRightScreenX) <= resizeHitTolerance) {
-          return { colIndex: c, borderX: colRightScreenX };
+    let widthTillStartCol = totalX;
+
+    for (let c = startCol; c <= endCol; c++) {
+      const colWidth =
+        this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
+      const colRightScreenX = widthTillStartCol + colWidth - this._grid.scrollX;
+
+      if(borderClick){
+        if (Math.abs(mouseX - colRightScreenX) <= this.resizeHitTolerance) {
+          return { colIndex: c, borderX: colRightScreenX , X : widthTillStartCol};
         }
-        widthTillStartCol += colWidth;
       }
-  
-      return { colIndex: -1, borderX: -1 };
+      else{
+        if (
+          mouseX >= (widthTillStartCol + this.selectionHitTolerance - this._grid.scrollX) &&
+          mouseX <= (colRightScreenX - this.selectionHitTolerance )
+        ) 
+        {
+          return { colIndex: c, borderX: colRightScreenX , X : widthTillStartCol};
+        }
+      }
+      widthTillStartCol += colWidth;
     }
-  
+
+    return { colIndex: -1, borderX: -1 , X : -1};
+  }
+
   getRowAtY(
-      mouseY: number,
-      resizeHitTolerance : number
-    ): { rowIndex: number; borderY: number } {
-      // Prevent interaction if mouse is inside the top-left corner intersecting block
-      if (mouseY < this._grid.topHeaderHeight) return { rowIndex: -1, borderY: -1 };
-  
-      const { startRow, totalY, endRow } = this.getRowBounds();
-  
-      let heightTillStartRow = totalY;
-  
-      for (let r = startRow; r <= endRow; r++) {
-        const rowHeight = this._grid._rowState._rowDataCache?.[r]?.height ?? this._grid.cellHeight;
-        const bottomRowScreenY = heightTillStartRow + rowHeight - this._grid.scrollY;
-  
-        if (Math.abs(mouseY - bottomRowScreenY) <= resizeHitTolerance) {
-          return { rowIndex: r, borderY: bottomRowScreenY };
-        }
-  
-        heightTillStartRow += rowHeight;
-      }
+    mouseY: number,
+    borderClick : boolean
+  ): { rowIndex: number; borderY: number } {
+    // Prevent interaction if mouse is inside the top-left corner intersecting block
+    if (mouseY < this._grid.topHeaderHeight)
       return { rowIndex: -1, borderY: -1 };
+
+    const { startRow, totalY, endRow } = this.getRowBounds();
+
+    let heightTillStartRow = totalY;
+
+    for (let r = startRow; r <= endRow; r++) {
+      const rowHeight =
+        this._grid._rowState._rowDataCache?.[r]?.height ??
+        this._grid.cellHeight;
+      const bottomRowScreenY =
+        heightTillStartRow + rowHeight - this._grid.scrollY;
+
+      if (Math.abs(mouseY - bottomRowScreenY) <= this.resizeHitTolerance) {
+        return { rowIndex: r, borderY: bottomRowScreenY };
+      }
+
+      heightTillStartRow += rowHeight;
     }
+    return { rowIndex: -1, borderY: -1 };
+  }
 }

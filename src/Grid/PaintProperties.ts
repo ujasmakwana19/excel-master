@@ -64,30 +64,25 @@ export const DarkHeaderProperties: PaintProperties = {
 	fontsize: "14px",
 };
 
-// Bonus — Sheets' active-cell outline. Useful since your footer
-// already computes range/sum/avg/count from a selection.
-export const SelectedCellLightProperties: PaintProperties = {
-	backgroundcolor: "#e8f0fe",   // Sheets' selection fill
-	bordercolor: "#1a73e8",       // Sheets' selection outline blue
-	borderwidth: 2,
 
-	textalign: "center",
-
-	fontcolor: "#202124",
-	fontweight: "",
-	fontstyle: "Arial, sans-serif",
-	fontsize: "14px",
+export const DefaultSelectedProperties: PaintProperties = {
+    backgroundcolor: "rgba(26, 115, 232, 0.04)", // Subtle blue transparent fill
+    bordercolor: "#1a73e8",                       // Classic spreadsheet blue outline
+    borderwidth: 0,
+    textalign: "center",
+    fontcolor: "#1a73e8",
+    fontweight: "",
+    fontstyle: "Arial, sans-serif",
+    fontsize: "14px",
 };
 
-export const SelectedCellDarkProperties: PaintProperties = {
-	backgroundcolor: "#28313f",   // dimmed blue-gray fill
-	bordercolor: "#8ab4f8",       // Google's dark-mode blue accent
-	borderwidth: 2,
-
-	textalign: "center",
-
-	fontcolor: "#e8eaed",
-	fontweight: "",
-	fontstyle: "Arial, sans-serif",
-	fontsize: "14px",
+export const DarkSelectedProperties: PaintProperties = {
+    backgroundcolor: "rgba(138, 180, 248, 0.08)", 
+    bordercolor: "#f0c419",                       
+    borderwidth: 0,
+    textalign: "center",
+    fontcolor: "#8ab4f8",
+    fontweight: "",
+    fontstyle: "Arial, sans-serif",
+    fontsize: "14px",
 };

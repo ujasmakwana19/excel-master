@@ -13,10 +13,10 @@ export type CellData = {
 export class Cell {
 	_cellDataCache: CellData = {
 		'1-1' : {
-			"text" : "Ram"
+			"text" : "Ram",
 		},
 		'1-2' : {
-			"text" : "Deep"
+			"text" : "Keshav"
 		}
 	};
 

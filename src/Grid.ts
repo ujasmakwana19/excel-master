@@ -1,5 +1,6 @@
 import { CanvasMaths } from "./CanvasMaths.js";
 import { Defaults, GridConstants, HeaderConstants } from "./constants.js";
+import { ColumnSelection } from "./EventListener/ColumnSelection.js";
 import { MouseScrollEventOpertion } from "./EventListener/MouseScrollEvent.js";
 import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
 import { Cell } from "./Grid/cell.js";
@@ -18,6 +19,7 @@ export class Grid {
   // Events
   _mouseEventScroll: MouseScrollEventOpertion;
   _resizeEvent: ResizeRowColumnEvent;
+  _colselectionEvent : ColumnSelection
 
   // Grid Paint
   _paintEngine: PaintEngine;
@@ -29,6 +31,10 @@ export class Grid {
   _rowState: Row;
   _colState: Column;
   _cellState: Cell;
+
+  _rowSelected : Set<number> = new Set<number>()
+  _colSelected : Set<number> = new Set<number>()
+  _cellSelected : Set<number> = new Set<number>()
 
   // primitives
   scrollX: number = 0;
@@ -73,6 +79,7 @@ export class Grid {
 	
 	this._resizeEvent = new ResizeRowColumnEvent(this );
 	this._mouseEventScroll = new MouseScrollEventOpertion();
+  this._colselectionEvent = new ColumnSelection(this)
 
 	this.drawInitGrid();
   }
@@ -106,6 +113,12 @@ export class Grid {
       ),
     );
 
+    this._canvas.addEventListener("mousedown", (e) =>
+      this._colselectionEvent.selectColumn(
+        e,
+      ),
+    );
+
 	// mouse released
     window.addEventListener("mouseup", () => this._resizeEvent.handleMouseUp());
   }
@@ -113,11 +126,13 @@ export class Grid {
   private resizeCanvas(): void {
     const rect: DOMRect | undefined =
       this._canvas.parentElement?.getBoundingClientRect();
-
-    if (rect === undefined) {
-      throw new Error("Can't get the dimensions of the element");
-    }
-
+    
+      
+      if (rect === undefined) {
+        throw new Error("Can't get the dimensions of the element");
+      }
+      
+    console.log(rect);
     this._canvas.width = rect.width;
     this._canvas.height = rect.height;
 

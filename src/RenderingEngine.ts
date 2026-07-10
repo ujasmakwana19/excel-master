@@ -2,6 +2,13 @@ import type { Grid } from "./Grid.js";
 
 export class RenderingEngine {
   _grid : Grid
+  _startRow : number = 0
+  _totalX : number = 0
+  _endRow : number = 0
+  _startCol : number = 0
+  _totalY : number = 0
+  _endCol : number = 0
+
 
   constructor(
     grid : Grid
@@ -23,6 +30,13 @@ export class RenderingEngine {
 
     // console.log({ startRow, totalY, endRow });
     // console.log({ startCol, totalX, endCol });
+    this._startRow = startRow
+    this._totalX = totalX
+    this._endRow = endRow
+    this._startCol = startCol
+    this._totalY = totalY
+    this._endCol = endCol
+
     // Take the snapshot of the current state of the canvas
     this._grid._ctx.save();
 
@@ -52,19 +66,18 @@ export class RenderingEngine {
         this._grid._rowState._rowDataCache?.[r]?.height ?? this._grid.cellHeight;
 
       for (let c = dataStartCol; c < endCol; c++) {
-        const screenX = widthSum - this._grid.scrollX;
-        const screenY = heightSum - this._grid.scrollY;
+        const startX = widthSum - this._grid.scrollX;
+        const startY = heightSum - this._grid.scrollY;
 
         let currentCellWidth: number =
           this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
         widthSum += currentCellWidth;
 
         this._grid._paintEngine.drawCell(
-          this._grid._ctx,
           r,
           c,
-          screenX,
-          screenY,
+          startX,
+          startY,
           false,
           currentCellWidth,
           currentCellHeight,
@@ -84,16 +97,15 @@ export class RenderingEngine {
 
     let widthSum: number = totalX;
     for (let c = dataStartCol; c < endCol; c++) {
-      const screenX = widthSum - this._grid.scrollX;
+      const startX = widthSum - this._grid.scrollX;
       let currentCellWidth =
         this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
       widthSum += currentCellWidth;
 
       this._grid._paintEngine.drawCell(
-        this._grid._ctx,
         0,
         c,
-        screenX,
+        startX,
         0,
         true,
         currentCellWidth,
@@ -116,7 +128,6 @@ export class RenderingEngine {
       heightSum += currentCellHeight;
 
       this._grid._paintEngine.drawCell(
-        this._grid._ctx,
         r,
         0,
         0,
@@ -130,7 +141,6 @@ export class RenderingEngine {
 
     // Top left corner rectangle
     this._grid._paintEngine.drawCell(
-      this._grid._ctx,
       0,
       0,
       0,
@@ -139,5 +149,35 @@ export class RenderingEngine {
       this._grid.leftHeaderWidth,
       this._grid.topHeaderHeight,
     );
+
+    this.renderSelectedColumn()
+  }
+
+  renderSelectedColumn(): void {
+    const dataStartCol: number = Math.max(1, this._startCol);
+    const canvasHeight = this._grid._canvas.height;
+    const startY = this._grid.topHeaderHeight; 
+    const selectionHeight = canvasHeight - startY;
+
+    let widthSum = this._totalX;
+
+    for (let c = dataStartCol; c <= this._endCol; c++) {
+      const currentCellWidth = this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
+      
+      if (this._grid._colSelected.has(c)) {
+        const startX = widthSum - this._grid.scrollX;
+
+        if (startX + currentCellWidth > this._grid.leftHeaderWidth && startX < this._grid._canvas.width) {
+          
+          this._grid._paintEngine.drawSelected(
+            startX,
+            startY,
+            currentCellWidth,
+            selectionHeight,
+          );
+        }
+      }
+      widthSum += currentCellWidth; 
+   }
   }
 }

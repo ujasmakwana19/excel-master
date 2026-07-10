@@ -1,5 +1,5 @@
 import type { Grid } from "./Grid.js";
-import { DarkGridProperties, DarkHeaderProperties, DefaultGridProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
+import { DarkGridProperties, DarkHeaderProperties, DarkSelectedProperties, DefaultGridProperties, DefaultSelectedProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
 
 export class PaintEngine {
 	_grid : Grid
@@ -9,7 +9,6 @@ export class PaintEngine {
 	}
 
 	drawCell(
-		_ctx: CanvasRenderingContext2D,
 		row: number, // x index
 		col: number, // y index
 		x: number, // X - px coordinate 
@@ -30,7 +29,6 @@ export class PaintEngine {
 			}
 
 			this.paintPropertiesOfCells(
-					_ctx,
 					x,
 					y,
 					specificWidth,
@@ -43,7 +41,6 @@ export class PaintEngine {
 			const cell = this._grid._cellState.getData(row, col)
 			
 				this.paintPropertiesOfCells(
-					_ctx,
 					x,
 					y,
 					specificWidth,
@@ -56,8 +53,50 @@ export class PaintEngine {
 		}
 	}
 
+	drawSelected(
+		x : number,
+		y : number,
+		specificWidth : number,
+		specificHeight : number,
+		GridProperty : PaintProperties = this._grid.darkMode ? DarkSelectedProperties : DefaultSelectedProperties,
+	) : void{
+		
+		
+
+		this._grid._ctx.save();
+		this._grid._ctx.beginPath();
+		this._grid._ctx.rect(
+			this._grid.leftHeaderWidth, 
+			this._grid.topHeaderHeight, 
+			this._grid._canvas.width - this._grid.leftHeaderWidth, 
+			this._grid._canvas.height - this._grid.topHeaderHeight
+		);
+		this._grid._ctx.clip();
+
+		
+		this._grid._ctx.fillStyle = GridProperty.backgroundcolor;
+		this._grid._ctx.fillRect(x, y, specificWidth, specificHeight);
+
+		this._grid._ctx.strokeStyle = GridProperty.bordercolor;
+		this._grid._ctx.lineWidth = GridProperty.borderwidth;
+		
+		
+		const offset = this._grid._ctx.lineWidth % 2 === 0 ? 0 : 0.5;
+		
+		this._grid._ctx.beginPath();
+		this._grid._ctx.rect(
+			Math.floor(x) + offset, 
+			Math.floor(y) + offset, 
+			Math.floor(specificWidth), 
+			Math.floor(specificHeight)
+		);
+		this._grid._ctx.stroke();
+
+		this._grid._ctx.restore();
+
+	}
+
 	private paintPropertiesOfCells(
-		_ctx : CanvasRenderingContext2D,
 		x : number,
 		y : number,
 		specificWidth : number,
@@ -66,33 +105,35 @@ export class PaintEngine {
 		text? :string, 
 		properties? : PaintProperties ,
 	){
-		_ctx.fillStyle = properties?.backgroundcolor ?? DefaultGridProperty.backgroundcolor;
+		this._grid._ctx.fillStyle = properties?.backgroundcolor ?? DefaultGridProperty.backgroundcolor;
 
-		_ctx.fillRect(x, y, specificWidth, specificHeight);
+		this._grid._ctx.fillRect(x, y, specificWidth, specificHeight);
 
-		_ctx.strokeStyle = properties?.bordercolor ?? DefaultGridProperty.bordercolor;
+		this._grid._ctx.strokeStyle = properties?.bordercolor ?? DefaultGridProperty.bordercolor;
 
-		_ctx.lineWidth = properties?.borderwidth ??
+		this._grid._ctx.lineWidth = properties?.borderwidth ??
 		DefaultGridProperty.borderwidth
 
-		_ctx.strokeRect(x, y, specificWidth, specificHeight);
+		this._grid._ctx.strokeRect(x, y, specificWidth, specificHeight);
 
-		_ctx.fillStyle = properties?.fontcolor ??
+		this._grid._ctx.fillStyle = properties?.fontcolor ??
 		DefaultGridProperty.fontcolor;
 
 		const fontValue : string = `${properties?.fontweight ?? DefaultGridProperty.fontweight} ` + `${properties?.fontsize ?? DefaultGridProperty.fontsize} `+ `${properties?.fontstyle ?? DefaultGridProperty.fontstyle}`
 		
-		_ctx.font = fontValue
-		_ctx.textAlign = properties?.textalign ?? DefaultGridProperty.textalign;
+		this._grid._ctx.font = fontValue
+		this._grid._ctx.textAlign = properties?.textalign ?? DefaultGridProperty.textalign;
 
-		_ctx.textBaseline = "middle";
+		this._grid._ctx.textBaseline = "middle";
 
-		_ctx.fillText(
+		this._grid._ctx.fillText(
 				text ?? "",
 				x + specificWidth / 2,
 				y + specificHeight / 2,
 			);
 	}
+
+
 
 	// To make the column as the A, B, C, AB, ...
 	private getColLabel(colIndex: number): string {
