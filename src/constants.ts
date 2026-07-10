@@ -10,7 +10,7 @@ export const HeaderConstants = {
 
 export const Defaults = {
 	ROW: 100000,
-	COLUMN: 50,
+	COLUMN: 500,
 };
 
 export const thresHoldConstants = {
