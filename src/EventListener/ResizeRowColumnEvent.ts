@@ -1,4 +1,4 @@
-import { thresHoldConstants } from "../constants.js";
+import { thresHoldConstants } from "../Grid/constants.js";
 import type { Grid } from "../Grid.js";
 import type { RenderingEngine } from "../RenderingEngine.js";
 
@@ -41,7 +41,7 @@ export class ResizeRowColumnEvent {
         this.isResizing = true;
         this.resizeColIndex = colIndex;
         this.resizeStartX = event.clientX;
-        this.resizeStartWidth = this._grid._colState._colDataCache?.[colIndex]?.width ?? this._grid.cellWidth;
+        this.resizeStartWidth = this._grid._colState.getColWidth(colIndex);
 
         event.preventDefault();
         return; // Early return to avoid cross-triggers
@@ -51,13 +51,15 @@ export class ResizeRowColumnEvent {
     // Row Resizing Interaction
     if (mouseX <= this._grid.leftHeaderWidth) {
       const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, true);
+
       if (rowIndex !== -1) {
         this.isResizing = true;
         this.resizeRowIndex = rowIndex;
         this.resizeStartY = event.clientY;
-        this.resizeStartHeight = this._grid._rowState._rowDataCache?.[rowIndex]?.height ?? this._grid.cellHeight;
+        this.resizeStartHeight = this._grid._rowState.getRowHeight(rowIndex)
         event.preventDefault();
       }
+    
     }
   }
 
@@ -67,13 +69,14 @@ export class ResizeRowColumnEvent {
     _renderingEngine: RenderingEngine,
     event: MouseEvent
   ) {
-    // Case 1: Active Dragging / Resizing State
+
     if (this.isResizing) {
       if (this.resizeColIndex !== -1) {
         const deltaX = event.clientX - this.resizeStartX;
         const newWidth = Math.max(this.minWidth, this.resizeStartWidth + deltaX);
         _grid._colState.setProperties(this.resizeColIndex, newWidth);
         _grid.render();
+
       } else if (this.resizeRowIndex !== -1) {
         const deltaY = event.clientY - this.resizeStartY;
         const newHeight = Math.max(this.minHeight, this.resizeStartHeight + deltaY);

@@ -1,13 +1,16 @@
 import { CanvasMaths } from "./CanvasMaths.js";
-import { Defaults, GridConstants, HeaderConstants } from "./constants.js";
-import { ColumnSelection } from "./EventListener/ColumnSelection.js";
+import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
+import { SelectionManager } from "./EventListener/SelectionManager.js";
 import { MouseScrollEventOpertion } from "./EventListener/MouseScrollEvent.js";
 import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
-import { Cell } from "./Grid/cell.js";
-import { Column } from "./Grid/column.js";
-import { Row } from "./Grid/row.js";
+import { Cell } from "./DB/cell.js";
+import { Column } from "./DB/column.js";
+import { Row } from "./DB/row.js";
 import { PaintEngine } from "./PaintEngine.js";
 import { RenderingEngine } from "./RenderingEngine.js";
+import { SelectionState } from "./Grid/SelectionState.js";
+import { HistoryManager } from "./HistoryManager.js";
+import { CellEditor } from "./Cell/CellEditor.js";
 
 export class Grid {
   _canvas: HTMLCanvasElement;
@@ -19,22 +22,29 @@ export class Grid {
   // Events
   _mouseEventScroll: MouseScrollEventOpertion;
   _resizeEvent: ResizeRowColumnEvent;
-  _colselectionEvent : ColumnSelection
+  _selectionManager: SelectionManager;
 
   // Grid Paint
   _paintEngine: PaintEngine;
 
   // Maths Function
-  _canvasMaths : CanvasMaths   
+  _canvasMaths: CanvasMaths;
 
   // states
   _rowState: Row;
   _colState: Column;
   _cellState: Cell;
 
-  _rowSelected : Set<number> = new Set<number>()
-  _colSelected : Set<number> = new Set<number>()
-  _cellSelected : Set<number> = new Set<number>()
+  // selection state
+  _selection: SelectionState;
+
+  // undo/redo stack for cell operations (text edits + toolbar formatting)
+  _historyManager: HistoryManager;
+
+  // inline cell-edit input overlay
+  _cellEditor: CellEditor;
+
+  onSelectionChange?: () => void;
 
   // primitives
   scrollX: number = 0;
@@ -52,36 +62,32 @@ export class Grid {
   rowNo: number = Defaults.ROW;
   columnNo: number = Defaults.COLUMN;
 
-  selectedColIndex: number = -1;
-
-  darkMode : boolean = false;
+  darkMode: boolean = false;
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this._canvas = canvas;
     this._ctx = ctx;
 
-	
     this._rowState = new Row();
     this._colState = new Column();
     this._cellState = new Cell();
-	
-    this._paintEngine = new PaintEngine(
-		this
-    );
-	
-	this._canvasMaths = new CanvasMaths(
-		this
-	)
-	
-    this._renderingEngine = new RenderingEngine(
-		this
-    );
-	
-	this._resizeEvent = new ResizeRowColumnEvent(this );
-	this._mouseEventScroll = new MouseScrollEventOpertion();
-  this._colselectionEvent = new ColumnSelection(this)
 
-	this.drawInitGrid();
+    this._selection = new SelectionState();
+
+    this._paintEngine = new PaintEngine(this);
+
+    this._canvasMaths = new CanvasMaths(this);
+
+    this._renderingEngine = new RenderingEngine(this);
+
+    this._resizeEvent = new ResizeRowColumnEvent(this);
+    this._mouseEventScroll = new MouseScrollEventOpertion();
+    this._selectionManager = new SelectionManager(this);
+
+    this._historyManager = new HistoryManager();
+    this._cellEditor = new CellEditor(this);
+
+    this.drawInitGrid();
   }
 
   private async drawInitGrid() {
@@ -96,7 +102,7 @@ export class Grid {
       { passive: false },
     );
 
-    // mouse moving on the
+    // mouse move
     this._canvas.addEventListener("mousemove", (e) =>
       this._resizeEvent.handleMouseMove(
         this._canvas,
@@ -106,33 +112,51 @@ export class Grid {
       ),
     );
 
-	// mouse click
-    this._canvas.addEventListener("mousedown", (e) =>
-      this._resizeEvent.handleMouseDown(
-        e,
-      ),
-    );
+    // mouse down
+    this._canvas.addEventListener("mousedown", (e) => {
+      
+      // mouse down for the resize event
+      this._resizeEvent.handleMouseDown(e);
+        
+      if (!this._resizeEvent.isResizing) {
+        this._selectionManager.handleMouseDown(e);
+      }
+    });
 
-    this._canvas.addEventListener("mousedown", (e) =>
-      this._colselectionEvent.selectColumn(
-        e,
-      ),
-    );
-
-	// mouse released
+    // mouse released
     window.addEventListener("mouseup", () => this._resizeEvent.handleMouseUp());
+
+    // undo / redo (Ctrl/Cmd+Z, Ctrl/Cmd+Y, Ctrl/Cmd+Shift+Z)
+    // Skipped while a cell is actively being edited, so the browser's own
+    // native text-input undo (editing keystrokes) takes precedence there.
+    window.addEventListener("keydown", (e) => {
+      if (this._cellEditor.isEditing) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        this._historyManager.undo();
+        this.render();
+        this.onSelectionChange?.();
+      } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault();
+        this._historyManager.redo();
+        this.render();
+        this.onSelectionChange?.();
+      }
+    });
   }
 
+  // Viewport Resize Manger
   private resizeCanvas(): void {
     const rect: DOMRect | undefined =
       this._canvas.parentElement?.getBoundingClientRect();
-    
-      
-      if (rect === undefined) {
-        throw new Error("Can't get the dimensions of the element");
-      }
-      
-    console.log(rect);
+
+    if (rect === undefined) {
+      throw new Error("Can't get the dimensions of the element");
+    }
+
     this._canvas.width = rect.width;
     this._canvas.height = rect.height;
 

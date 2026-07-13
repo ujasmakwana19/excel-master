@@ -68,7 +68,7 @@ export const DarkHeaderProperties: PaintProperties = {
 export const DefaultSelectedProperties: PaintProperties = {
     backgroundcolor: "rgba(26, 115, 232, 0.04)", // Subtle blue transparent fill
     bordercolor: "#1a73e8",                       // Classic spreadsheet blue outline
-    borderwidth: 0,
+    borderwidth: 1,
     textalign: "center",
     fontcolor: "#1a73e8",
     fontweight: "",
@@ -79,10 +79,32 @@ export const DefaultSelectedProperties: PaintProperties = {
 export const DarkSelectedProperties: PaintProperties = {
     backgroundcolor: "rgba(138, 180, 248, 0.08)", 
     bordercolor: "#f0c419",                       
-    borderwidth: 0,
+    borderwidth: 1,
     textalign: "center",
     fontcolor: "#8ab4f8",
     fontweight: "",
     fontstyle: "Arial, sans-serif",
     fontsize: "14px",
 };
+
+export const HeaderDefaultSelectedGridProperties : PaintProperties= {
+	backgroundcolor: "rgba(0, 91, 210, 0.23)", 
+    bordercolor: "#1a73e8",                       
+    borderwidth: 0,
+    textalign: "center",
+    fontcolor: "#1a73e8",
+    fontweight: "",
+    fontstyle: "Arial, sans-serif",
+    fontsize: "14px",
+}
+
+export const DarkHeaderSelectedProperties : PaintProperties = {
+	backgroundcolor: "rgba(245, 205, 44, 0.2)", 
+    bordercolor: "#f0c419",                       
+    borderwidth: 0,
+    textalign: "center",
+    fontcolor: "#1a73e8",
+    fontweight: "",
+    fontstyle: "Arial, sans-serif",
+    fontsize: "14px",
+}

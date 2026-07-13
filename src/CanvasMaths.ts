@@ -1,9 +1,9 @@
-import { thresHoldConstants } from "./constants.js";
+import { thresHoldConstants } from "./Grid/constants.js";
 import type { Grid } from "./Grid.js";
 
 export class CanvasMaths {
   _grid: Grid;
-  
+
   private readonly resizeHitTolerance: number = thresHoldConstants.resizeHitTolerance;
   private readonly selectionHitTolerance: number = thresHoldConstants.selectionHitTolerance;
 
@@ -28,7 +28,7 @@ export class CanvasMaths {
     for (let r = 1; r <= this._grid.rowNo; r++) {
       // get the custom height
       const rowHeight =
-        this._grid._rowState.getData?.[r]?.height ?? this._grid.cellHeight;
+        this._grid._rowState.getRowHeight(r) 
 
       // If the bottom of this row is past our scroll position, this is our start row
       if (totalY + rowHeight > this._grid.scrollY) {
@@ -41,12 +41,11 @@ export class CanvasMaths {
     }
 
     // To calculate the end Row
-    let visibleY = totalY - this._grid.scrollY; // totalY (height in pixel) - scrolled pixel
+    let visibleY: number = totalY - this._grid.scrollY; // totalY (height in pixel) - scrolled pixel
 
     for (let r = startRow; r <= this._grid.rowNo; r++) {
       const rowHeight =
-        this._grid._rowState._rowDataCache?.[r]?.height ??
-        this._grid.cellHeight;
+        this._grid._rowState.getRowHeight(r);
       visibleY += rowHeight;
       endRow = r;
 
@@ -72,7 +71,7 @@ export class CanvasMaths {
     for (let c = 1; c <= this._grid.columnNo; c++) {
       // get the custom width
       const colWidth =
-        this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
+        this._grid._colState.getColWidth(c);
 
       // If the left of this col is past our scroll position, this is our start col
       if (totalX + colWidth > this._grid.scrollX) {
@@ -86,7 +85,7 @@ export class CanvasMaths {
     let visibleX = totalX - this._grid.scrollX;
     for (let c = startCol; c <= this._grid.columnNo; c++) {
       const colWidth =
-        this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
+        this._grid._colState.getColWidth(c);
       visibleX += colWidth;
       endCol = c;
 
@@ -103,47 +102,43 @@ export class CanvasMaths {
 
   getColAtX(
     mouseX: number,
-    borderClick : boolean,
-  ): { colIndex: number, borderX: number,  X : number}   {
-
+    borderClick: boolean,
+  ): { colIndex: number; borderX: number } {
     if (mouseX < this._grid.leftHeaderWidth)
-      return { colIndex: -1, borderX: -1, X : -1 };
+      return { colIndex: -1, borderX: -1};
 
     const { startCol, totalX, endCol } = this.getColBounds();
-    console.log({ startCol, totalX, endCol });
-  
+
     let widthTillStartCol = totalX;
 
     for (let c = startCol; c <= endCol; c++) {
       const colWidth =
-        this._grid._colState._colDataCache?.[c]?.width ?? this._grid.cellWidth;
+        this._grid._colState.getColWidth(c);
       const colRightScreenX = widthTillStartCol + colWidth - this._grid.scrollX;
 
-      if(borderClick){
+      if (borderClick) {
         if (Math.abs(mouseX - colRightScreenX) <= this.resizeHitTolerance) {
-          return { colIndex: c, borderX: colRightScreenX , X : widthTillStartCol};
+          return { colIndex: c, borderX: colRightScreenX };
         }
-      }
-      else{
+      } else {
         if (
-          mouseX >= (widthTillStartCol + this.selectionHitTolerance - this._grid.scrollX) &&
-          mouseX <= (colRightScreenX - this.selectionHitTolerance )
-        ) 
-        {
-          return { colIndex: c, borderX: colRightScreenX , X : widthTillStartCol};
+          mouseX >= widthTillStartCol + this.selectionHitTolerance - this._grid.scrollX &&
+          mouseX <= colRightScreenX - this.selectionHitTolerance
+        ) {
+          return { colIndex: c, borderX: colRightScreenX };
         }
       }
       widthTillStartCol += colWidth;
     }
 
-    return { colIndex: -1, borderX: -1 , X : -1};
+    return { colIndex: -1, borderX: -1};
   }
 
   getRowAtY(
     mouseY: number,
-    borderClick : boolean
+    borderClick: boolean,
   ): { rowIndex: number; borderY: number } {
-    // Prevent interaction if mouse is inside the top-left corner intersecting block
+
     if (mouseY < this._grid.topHeaderHeight)
       return { rowIndex: -1, borderY: -1 };
 
@@ -153,17 +148,54 @@ export class CanvasMaths {
 
     for (let r = startRow; r <= endRow; r++) {
       const rowHeight =
-        this._grid._rowState._rowDataCache?.[r]?.height ??
-        this._grid.cellHeight;
+        this._grid._rowState.getRowHeight(r);
       const bottomRowScreenY =
         heightTillStartRow + rowHeight - this._grid.scrollY;
 
-      if (Math.abs(mouseY - bottomRowScreenY) <= this.resizeHitTolerance) {
-        return { rowIndex: r, borderY: bottomRowScreenY };
+      if (borderClick) {
+        if (Math.abs(mouseY - bottomRowScreenY) <= this.resizeHitTolerance) {
+          return { rowIndex: r, borderY: bottomRowScreenY };
+        }
+      } else {
+        if (
+          mouseY >= heightTillStartRow + this.selectionHitTolerance - this._grid.scrollY &&
+          mouseY <= bottomRowScreenY - this.selectionHitTolerance
+        ) {
+          return { rowIndex: r, borderY: bottomRowScreenY };
+        }
       }
 
       heightTillStartRow += rowHeight;
     }
     return { rowIndex: -1, borderY: -1 };
+  }
+
+  getCellRect(
+    row: number,
+    col: number,
+  ): { x: number; y: number; width: number; height: number } | null {
+    const { startCol, totalX } = this.getColBounds();
+    const { startRow, totalY } = this.getRowBounds();
+
+    if (col < startCol || row < startRow) return null;
+
+    let x = totalX;
+    for (let c = startCol; c < col; c++) {
+      x += this._grid._colState.getColWidth(c);
+    }
+    const width = this._grid._colState.getColWidth(col);
+
+    let y = totalY;
+    for (let r = startRow; r < row; r++) {
+      y += this._grid._rowState.getRowHeight(r);
+    }
+    const height = this._grid._rowState.getRowHeight(row);
+
+    return {
+      x: x - this._grid.scrollX,
+      y: y - this._grid.scrollY,
+      width,
+      height,
+    };
   }
 }

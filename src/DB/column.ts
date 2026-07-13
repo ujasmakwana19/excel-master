@@ -1,8 +1,8 @@
-import { Defaults, GridConstants, HeaderConstants } from "../constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../Grid/constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
-} from "./PaintProperties.js";
+} from "../Grid/PaintProperties.js";
 
 export type ColumnData = {
 	[key: number]: {
@@ -12,7 +12,6 @@ export type ColumnData = {
 };
 
 export class Column {
-	totalWidth: number = 0;
 	_colDataCache: ColumnData = {
 		1: {
 			width: 90,
@@ -24,6 +23,10 @@ export class Column {
 
 	get getData(): ColumnData {
 		return this._colDataCache;
+	}
+
+	getColWidth(c : number) : number {
+		return this._colDataCache?.[c]?.width ?? GridConstants.WIDTH;
 	}
 
 	getCol(
@@ -53,16 +56,14 @@ export class Column {
 
 	calCulateTotalWidth(): number {
 		const colCount = Object.keys(this._colDataCache).length;
-		const remainingCols = Defaults.COLUMN - colCount - 1;
+		const remainingCols = Defaults.COLUMN - colCount ;
 
-		// console.log(remainingCols);
 		let sum = 0;
 		for (const key in this._colDataCache) {
 			if (!Object.hasOwn(this._colDataCache, key)) continue;
 			sum += this._colDataCache[key]?.width ?? 0;
 		}
 
-		this.totalWidth = remainingCols * GridConstants.WIDTH + sum;
-		return this.totalWidth + HeaderConstants.LEFTWIDTH;
+		return ((remainingCols * GridConstants.WIDTH) + sum + HeaderConstants.LEFTWIDTH);
 	}
 }

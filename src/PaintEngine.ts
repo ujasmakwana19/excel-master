@@ -1,5 +1,5 @@
 import type { Grid } from "./Grid.js";
-import { DarkGridProperties, DarkHeaderProperties, DarkSelectedProperties, DefaultGridProperties, DefaultSelectedProperties, HeaderDefaultGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
+import { DarkGridProperties, DarkHeaderProperties, DarkHeaderSelectedProperties, DarkSelectedProperties, DefaultGridProperties, DefaultSelectedProperties, HeaderDefaultGridProperties, HeaderDefaultSelectedGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
 
 export class PaintEngine {
 	_grid : Grid
@@ -58,42 +58,34 @@ export class PaintEngine {
 		y : number,
 		specificWidth : number,
 		specificHeight : number,
-		GridProperty : PaintProperties = this._grid.darkMode ? DarkSelectedProperties : DefaultSelectedProperties,
+		isHeader : boolean
+		
 	) : void{
-		
-		
+		let GridProperty : PaintProperties = this._grid.darkMode ? DarkSelectedProperties : DefaultSelectedProperties
+		if(isHeader){
+			GridProperty = this._grid.darkMode ? DarkHeaderSelectedProperties : HeaderDefaultSelectedGridProperties
+		}
 
-		this._grid._ctx.save();
-		this._grid._ctx.beginPath();
-		this._grid._ctx.rect(
-			this._grid.leftHeaderWidth, 
-			this._grid.topHeaderHeight, 
-			this._grid._canvas.width - this._grid.leftHeaderWidth, 
-			this._grid._canvas.height - this._grid.topHeaderHeight
-		);
-		this._grid._ctx.clip();
-
-		
 		this._grid._ctx.fillStyle = GridProperty.backgroundcolor;
 		this._grid._ctx.fillRect(x, y, specificWidth, specificHeight);
 
-		this._grid._ctx.strokeStyle = GridProperty.bordercolor;
-		this._grid._ctx.lineWidth = GridProperty.borderwidth;
-		
-		
-		const offset = this._grid._ctx.lineWidth % 2 === 0 ? 0 : 0.5;
-		
-		this._grid._ctx.beginPath();
-		this._grid._ctx.rect(
-			Math.floor(x) + offset, 
-			Math.floor(y) + offset, 
-			Math.floor(specificWidth), 
-			Math.floor(specificHeight)
-		);
-		this._grid._ctx.stroke();
+		if(!isHeader){
 
-		this._grid._ctx.restore();
-
+			this._grid._ctx.strokeStyle = GridProperty.bordercolor;
+			this._grid._ctx.lineWidth = GridProperty.borderwidth;
+			
+			
+			const offset = this._grid._ctx.lineWidth % 2 === 0 ? 0 : 0.5;
+			
+			this._grid._ctx.beginPath();
+			this._grid._ctx.rect(
+				Math.floor(x) + offset, 
+				Math.floor(y) + offset, 
+				Math.floor(specificWidth), 
+				Math.floor(specificHeight)
+			);
+			this._grid._ctx.stroke();
+		}
 	}
 
 	private paintPropertiesOfCells(
