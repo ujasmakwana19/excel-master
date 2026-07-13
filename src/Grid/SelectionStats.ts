@@ -2,8 +2,8 @@ import type { Grid } from "../Grid.js";
 import { SelectionMode } from "./SelectionState.js";
 
 export interface SelectionStats {
-  count: number;         // total number of cells covered by the selection
-  sum: number | null;    // null => no numeric cells in the selection ("-")
+  count: number;         
+  sum: number | null;    
   avg: number | null;
   min: number | null;
   max: number | null;

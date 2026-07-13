@@ -1,7 +1,5 @@
 import type { Command } from "./Commands.js";
-
-const MAX_HISTORY = 200;
-
+import { MAX_HISTORY } from "./Grid/constants.js";
 
 export class HistoryManager {
   private undoStack: Command[] = [];

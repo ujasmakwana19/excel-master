@@ -126,8 +126,7 @@ export class Grid {
     // mouse released
     window.addEventListener("mouseup", () => this._resizeEvent.handleMouseUp());
 
-    // undo / redo (Ctrl/Cmd+Z, Ctrl/Cmd+Y, Ctrl/Cmd+Shift+Z)
-    // Skipped while a cell is actively being edited, so the browser's own
+    // While a cell is actively being edited, so the browser's own
     // native text-input undo (editing keystrokes) takes precedence there.
     window.addEventListener("keydown", (e) => {
       if (this._cellEditor.isEditing) return;

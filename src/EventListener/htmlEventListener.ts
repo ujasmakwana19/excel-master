@@ -61,8 +61,27 @@ export function HandleLoadJsonData(grid : Grid): void {
 //  To convert to the dark mode
 export function HandleDarkModeToggle(grid: Grid): void {
     const darkModeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+    const fontColorInput = document.getElementById('font-color') as HTMLInputElement;
+    const bgColorInput = document.getElementById('bg-color') as HTMLInputElement;
+    const htmlEl = document.documentElement;
+
     darkModeToggle.addEventListener('click', () => {
         grid.darkMode = !grid.darkMode;
+
+        if (grid.darkMode) {
+            htmlEl.setAttribute('data-theme', 'dark');
+            darkModeToggle.textContent = 'Light Mode';
+            
+            bgColorInput.value = '#202124'; 
+            fontColorInput.value = '#ffffff'; 
+        } else {
+            htmlEl.setAttribute('data-theme', 'light');
+            darkModeToggle.textContent = 'Dark Mode';
+            
+            bgColorInput.value = '#ffffff'; 
+            fontColorInput.value = '#202124'; 
+        }
+
         grid.render();
     });
 }

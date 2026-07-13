@@ -42,8 +42,6 @@ export class BatchCommand implements Command {
 
   undo(): void {
     for (let i = this.commands.length - 1; i >= 0; i--) 
-      if(this.commands !== undefined && this.commands.length !== 0 && this.commands[i] !== undefined){
-        this.commands[i].undo();
-      }
+      this.commands[i]?.undo();
   }
 }

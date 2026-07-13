@@ -14,12 +14,6 @@ export type CellData = {
 
 export class Cell {
 	_cellDataCache: CellData = {
-		'1-1' : {
-			"text" : "Ram",
-		},
-		'1-2' : {
-			"text" : "Keshav"
-		}
 	};
 
 	get getCells() {

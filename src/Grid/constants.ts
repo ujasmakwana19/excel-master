@@ -19,3 +19,10 @@ export const thresHoldConstants = {
 	minWidth : 30,
 	minHeight : 25
 } 
+
+export const MAX_HISTORY = 200;
+export const EDGE_SCROLL_SPEED = 12;
+export const MAX_CELLS_PER_FORMAT_ACTION = 20000;
+
+
+

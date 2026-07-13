@@ -1,10 +1,10 @@
 import type { Grid } from "../Grid.js";
-import { DefaultGridProperties, type PaintProperties } from "../Grid/PaintProperties.js";
+import { DarkGridProperties, DefaultGridProperties, type PaintProperties } from "../Grid/PaintProperties.js";
 import { SelectionMode } from "../Grid/SelectionState.js";
 import { SetCellCommand, BatchCommand } from "../Commands.js";
 import type { CellValue } from "../DB/cell.js";
+import { MAX_CELLS_PER_FORMAT_ACTION } from "../Grid/constants.js";
 
-const MAX_CELLS_PER_FORMAT_ACTION = 20000;
 
 export function HandleCellPropertiesToolbar(grid: Grid): void {
   const fontFamily = document.getElementById("font-family") as HTMLSelectElement;
@@ -19,7 +19,10 @@ export function HandleCellPropertiesToolbar(grid: Grid): void {
     const commands = cells.map(([r, c]) => {
       const before = grid._cellState.getData(r, c);
       const prev: CellValue | undefined = before ? { ...before } : undefined;
-      const basis = before?.properties ?? DefaultGridProperties;
+      let basis = before?.properties ?? DefaultGridProperties;
+      if(grid.darkMode){
+        basis = before?.properties ?? DarkGridProperties;
+      }
       const next: CellValue = {
         text: before?.text ?? "",
         properties: { ...basis, ...partial },

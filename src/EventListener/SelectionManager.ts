@@ -1,8 +1,8 @@
 import type { Grid } from "../Grid.js";
+import { EDGE_SCROLL_SPEED } from "../Grid/constants.js";
 import { SelectionMode } from "../Grid/SelectionState.js";
 import { AutoScroll } from "./AutoScroll.js";
 
-const EDGE_SCROLL_SPEED = 12;
 
 export class SelectionManager {
   private readonly _grid: Grid;
