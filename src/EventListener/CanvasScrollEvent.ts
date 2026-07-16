@@ -1,6 +1,6 @@
 import type { Grid } from "../Grid.js";
 
-export class MouseScrollEventOpertion{
+export class CanvasScrollEventOpertion{
 
     handleWheel(event: WheelEvent, _grid : Grid) {
         event.preventDefault(); 
@@ -14,6 +14,8 @@ export class MouseScrollEventOpertion{
         const maxScrollX = Math.max(0, (_grid.totalWidth) - _grid._canvas.width);
         const maxScrollY = Math.max(0, (_grid.totalHeight) - _grid._canvas.height);
 
+        // max so that it does not go to negative
+        // min so that it does not scroll beyond the limit
         targetX = Math.min(Math.max(0, targetX), maxScrollX);
         targetY = Math.min(Math.max(0, targetY), maxScrollY);
         

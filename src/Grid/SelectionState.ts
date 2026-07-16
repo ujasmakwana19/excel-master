@@ -14,18 +14,25 @@ export class SelectionState {
   focusRow: number | null = null;
   anchorCol: number | null = null;
   focusCol: number | null = null;
+
   clear(): void {
     this.mode = SelectionMode.NONE;
-    this.anchorRow = this.focusRow = this.anchorCol = this.focusCol = null;
+    this.anchorRow = null
+    this.focusRow = null
+    this.anchorCol = null
+    this.focusCol = null;
   }
 
   get rowRange(): Range | null {
-    if (this.anchorRow === null || this.focusRow === null) return null;
+    if (this.anchorRow === null || this.focusRow === null) 
+      return null;
+
     return [Math.min(this.anchorRow, this.focusRow), Math.max(this.anchorRow, this.focusRow)];
   }
 
   get colRange(): Range | null {
-    if (this.anchorCol === null || this.focusCol === null) return null;
+    if (this.anchorCol === null || this.focusCol === null) 
+      return null;
     return [Math.min(this.anchorCol, this.focusCol), Math.max(this.anchorCol, this.focusCol)];
   }
 
@@ -52,8 +59,16 @@ export class SelectionState {
   isCellSelected(r: number, c: number): boolean {
     console.log({anchorRow : this.anchorRow, focusRow : this.focusRow, anchorCol : this.anchorCol, focusCol : this.focusCol });
     if (this.mode !== SelectionMode.CELL) return false;
-    const rr = this.rowRange;
-    const cr = this.colRange;
-    return !!rr && !!cr && r >= rr[0] && r <= rr[1] && c >= cr[0] && c <= cr[1];
+    const rowRange = this.rowRange;
+    const colRange = this.colRange;
+
+    if(
+      rowRange !== undefined && rowRange !== null && 
+      colRange !== undefined && colRange !== null
+    ){
+      return r >= rowRange[0] && r <= rowRange[1] && 
+      c >= colRange[0] && c <= colRange[1];
+    }
+    return false
   }
 }

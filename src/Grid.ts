@@ -1,7 +1,7 @@
 import { CanvasMaths } from "./CanvasMaths.js";
 import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
 import { SelectionManager } from "./EventListener/SelectionManager.js";
-import { MouseScrollEventOpertion } from "./EventListener/MouseScrollEvent.js";
+import { CanvasScrollEventOpertion } from "./EventListener/CanvasScrollEvent.js";
 import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
 import { Cell } from "./DB/cell.js";
 import { Column } from "./DB/column.js";
@@ -11,6 +11,7 @@ import { RenderingEngine } from "./RenderingEngine.js";
 import { SelectionState } from "./Grid/SelectionState.js";
 import { HistoryManager } from "./HistoryManager.js";
 import { CellEditor } from "./Cell/CellEditor.js";
+import { PointerEventManager } from "./EventListener/PointerEventManager.js";
 
 export class Grid {
   _canvas: HTMLCanvasElement;
@@ -20,9 +21,10 @@ export class Grid {
   _renderingEngine: RenderingEngine;
 
   // Events
-  _mouseEventScroll: MouseScrollEventOpertion;
+  _canvasScroll: CanvasScrollEventOpertion;
   _resizeEvent: ResizeRowColumnEvent;
   _selectionManager: SelectionManager;
+  _pointerEventManager : PointerEventManager
 
   // Grid Paint
   _paintEngine: PaintEngine;
@@ -81,12 +83,12 @@ export class Grid {
     this._renderingEngine = new RenderingEngine(this);
 
     this._resizeEvent = new ResizeRowColumnEvent(this);
-    this._mouseEventScroll = new MouseScrollEventOpertion();
+    this._canvasScroll = new CanvasScrollEventOpertion();
     this._selectionManager = new SelectionManager(this);
+    this._pointerEventManager = new PointerEventManager(this)
 
     this._historyManager = new HistoryManager();
     this._cellEditor = new CellEditor(this);
-
     this.drawInitGrid();
   }
 
@@ -98,7 +100,7 @@ export class Grid {
     // Grid Render on scroll
     window.addEventListener(
       "wheel",
-      (e) => this._mouseEventScroll.handleWheel(e, this),
+      (e) => this._canvasScroll.handleWheel(e, this),
       { passive: false },
     );
 

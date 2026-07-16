@@ -64,6 +64,7 @@ export class SelectionManager {
   // Pointer Down — start a selection
   // ==========================================
   handlePointerDown(e: PointerEvent): void {
+    // 
     this._grid._canvas.focus();
 
     const point = this.getPointerCoords(e);

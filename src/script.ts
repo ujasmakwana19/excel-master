@@ -41,8 +41,6 @@ window.addEventListener("DOMContentLoaded", () => {
 	HandleDarkModeToggle(gridBuilder)
 	HandleCellPropertiesToolbar(gridBuilder)
 
-	// Refresh the footer's Sum/Avg/Min/Max/Count and sync the formatting
-	// toolbar whenever the selection changes.
 	gridBuilder.onSelectionChange = () => {
 		renderSelectionStatsToDom(gridBuilder);
 		syncToolbarFromSelection(gridBuilder);
