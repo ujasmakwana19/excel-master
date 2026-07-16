@@ -103,7 +103,7 @@ export class Grid {
     );
 
     // mouse move
-    this._canvas.addEventListener("mousemove", (e) =>
+    this._canvas.addEventListener("pointermove", (e) =>
       this._resizeEvent.handleMouseMove(
         this._canvas,
         this,
@@ -113,18 +113,18 @@ export class Grid {
     );
 
     // mouse down
-    this._canvas.addEventListener("mousedown", (e) => {
-      
-      // mouse down for the resize event
+    // Pointer down — resize-handle grab takes priority; otherwise it's a selection.
+    this._canvas.addEventListener("pointerdown", (e: PointerEvent) => {
+      // PointerEvent extends MouseEvent, so this still satisfies ResizeRowColumnEvent's signature.
       this._resizeEvent.handleMouseDown(e);
-        
+ 
       if (!this._resizeEvent.isResizing) {
-        this._selectionManager.handleMouseDown(e);
+        this._selectionManager.handlePointerDown(e);
       }
     });
 
     // mouse released
-    window.addEventListener("mouseup", () => this._resizeEvent.handleMouseUp());
+    window.addEventListener("pointerup", () => this._resizeEvent.handleMouseUp());
 
     // While a cell is actively being edited, so the browser's own
     // native text-input undo (editing keystrokes) takes precedence there.

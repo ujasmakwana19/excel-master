@@ -2,144 +2,222 @@ import type { Grid } from "../Grid.js";
 import { EDGE_SCROLL_SPEED } from "../Grid/constants.js";
 import { SelectionMode } from "../Grid/SelectionState.js";
 import { AutoScroll } from "./AutoScroll.js";
+import { RenderScheduler } from "./RenderScheduler.js";
 
+type Region = "topHeader" | "leftHeader" | "body" | "outside";
+
+interface SelectionAxes {
+  row: boolean;
+  col: boolean;
+}
+
+interface HitResult {
+  mode: SelectionMode;
+  row?: number;
+  col?: number;
+}
+
+// This table is the whole point of the refactor. ROW/COLUMN/CELL behavior
+// used to be a hardcoded if/else chain copy-pasted in three places
+// (mousedown region check, mousemove hit-testing, keyboard nav). Now every
+// one of those places just asks "does this mode care about rows / cols?"
+const SELECTION_AXES: Record<SelectionMode, SelectionAxes> = {
+  [SelectionMode.ROW]: { row: true, col: false },
+  [SelectionMode.COLUMN]: { row: false, col: true },
+  [SelectionMode.CELL]: { row: true, col: true },
+  [SelectionMode.NONE]: { row: false, col: false },
+};
+
+const ARROW_DELTAS: Record<string, [number, number]> = {
+  ArrowRight: [0, 1],
+  ArrowLeft: [0, -1],
+  ArrowDown: [1, 0],
+  ArrowUp: [-1, 0],
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
 
 export class SelectionManager {
   private readonly _grid: Grid;
-  private _isDragging = false;
   private readonly _autoScroll: AutoScroll;
+  private readonly _renderScheduler: RenderScheduler;
+  private _isDragging = false;
+  private _activePointerId: number | null = null;
 
   constructor(grid: Grid) {
     this._grid = grid;
     this._autoScroll = new AutoScroll((dx, dy) => this.scrollBy(dx, dy));
+
+    // Every render-triggering path (drag, autoscroll, keyboard) now goes
+    // through this one scheduler instead of calling grid.render() directly.
+    this._renderScheduler = new RenderScheduler(() => {
+      this._grid.render();
+      this._grid.onSelectionChange?.();
+    });
+
     this.initKeyboardEvents();
   }
 
   // ==========================================
-  // Mouse Down — start a selection
+  // Pointer Down — start a selection
   // ==========================================
-  handleMouseDown(e: MouseEvent): void {
+  handlePointerDown(e: PointerEvent): void {
     this._grid._canvas.focus();
 
-    const { mouseX, mouseY } = this.getMouseCoords(e);
+    const point = this.getPointerCoords(e);
+    const region = this.classifyRegion(point.x, point.y);
+    const hit = this.hitTestForRegion(region, point.x, point.y);
+    if (hit === null) return;
 
-    const inTopHeader = mouseY <= this._grid.topHeaderHeight && mouseX > this._grid.leftHeaderWidth;
-    const inLeftHeader = mouseX <= this._grid.leftHeaderWidth && mouseY > this._grid.topHeaderHeight;
-    const inBody = mouseX > this._grid.leftHeaderWidth && mouseY > this._grid.topHeaderHeight;
+    this.beginSelection(hit.mode, e.shiftKey, hit.row, hit.col);
+    this.startDrag(e);
+  }
 
-    if (inTopHeader) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, false);
-      if (colIndex === -1) return;
-      this.beginSelection(SelectionMode.COLUMN, e.shiftKey, undefined, colIndex);
+  // Pure geometry — which zone of the grid was clicked. No selection logic here.
+  private classifyRegion(x: number, y: number): Region {
+    const inTopHeader = y <= this._grid.topHeaderHeight && x > this._grid.leftHeaderWidth;
+    const inLeftHeader = x <= this._grid.leftHeaderWidth && y > this._grid.topHeaderHeight;
+    const inBody = x > this._grid.leftHeaderWidth && y > this._grid.topHeaderHeight;
 
-    } else if (inLeftHeader) {
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, false);
-      if (rowIndex === -1) return;
-      this.beginSelection(SelectionMode.ROW, e.shiftKey, rowIndex, undefined);
+    if (inTopHeader) return "topHeader";
+    if (inLeftHeader) return "leftHeader";
+    if (inBody) return "body";
+    return "outside";
+  }
 
-    } else if (inBody) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, false);
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, false);
-      if (colIndex === -1 || rowIndex === -1) return;
-      this.beginSelection(SelectionMode.CELL, e.shiftKey, rowIndex, colIndex);
-
-    } else {
-      return;
+  // Turns a region into a concrete (mode, row?, col?) hit, or null if the
+  // click landed on empty space past the last real row/col.
+  private hitTestForRegion(region: Region, x: number, y: number): HitResult | null {
+    if (region === "topHeader") {
+      const { colIndex } = this._grid._canvasMaths.getColAtX(x, false);
+      return colIndex === -1 ? null : { mode: SelectionMode.COLUMN, col: colIndex };
     }
 
-    this._isDragging = true;
-    window.addEventListener("mousemove", this.handleMouseMove);
-    window.addEventListener("mouseup", this.handleMouseUp);
+    if (region === "leftHeader") {
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(y, false);
+      return rowIndex === -1 ? null : { mode: SelectionMode.ROW, row: rowIndex };
+    }
 
-    this._grid.render();
-    this.notifyChange();
+    if (region === "body") {
+      const { colIndex } = this._grid._canvasMaths.getColAtX(x, false);
+      const { rowIndex } = this._grid._canvasMaths.getRowAtY(y, false);
+      if (colIndex === -1 || rowIndex === -1) return null;
+      return { mode: SelectionMode.CELL, row: rowIndex, col: colIndex };
+    }
+
+    return null;
   }
 
   private beginSelection(mode: SelectionMode, extend: boolean, row?: number, col?: number): void {
     const sel = this._grid._selection;
+    const sameModeExtend = extend && sel.mode === mode;
 
-    if (extend && sel.mode === mode) {
+    if (sameModeExtend) {
       // Shift+click: keep the existing anchor, move only the focus end.
       if (row !== undefined) sel.focusRow = row;
       if (col !== undefined) sel.focusCol = col;
-    } else {
-      sel.mode = mode;
-      if (row !== undefined) {
-        sel.anchorRow = row;
-        sel.focusRow = row;
-      }
-      if (col !== undefined) {
-        sel.anchorCol = col;
-        sel.focusCol = col;
-      }
+      return;
+    }
+
+    sel.mode = mode;
+    if (row !== undefined) {
+      sel.anchorRow = row;
+      sel.focusRow = row;
+    }
+    if (col !== undefined) {
+      sel.anchorCol = col;
+      sel.focusCol = col;
     }
   }
 
+  private startDrag(e: PointerEvent): void {
+    this._isDragging = true;
+    this._activePointerId = e.pointerId;
+
+    // Pointer capture replaces the old window-level mousemove/mouseup hack.
+    // All further pointer events for this pointerId route to the canvas
+    // even if the cursor leaves it mid-drag — no manual listener cleanup risk.
+    this._grid._canvas.setPointerCapture(e.pointerId);
+    this._grid._canvas.addEventListener("pointermove", this.handlePointerMove);
+    this._grid._canvas.addEventListener("pointerup", this.handlePointerUp);
+    this._grid._canvas.addEventListener("pointercancel", this.handlePointerUp);
+
+    this._renderScheduler.request();
+  }
+
   // ==========================================
-  // Mouse Move — drag to extend selection
+  // Pointer Move — drag to extend selection
   // ==========================================
-  private handleMouseMove = (e: MouseEvent): void => {
+  private handlePointerMove = (e: PointerEvent): void => {
     if (!this._isDragging) return;
 
-    const { mouseX, mouseY } = this.getMouseCoords(e);
-    const mode = this._grid._selection.mode;
-
-    let dx = 0;
-    let dy = 0;
-    if (mode !== SelectionMode.ROW) {
-      if (mouseX > this._grid._canvas.width) dx = EDGE_SCROLL_SPEED;
-      else if (mouseX < this._grid.leftHeaderWidth) dx = -EDGE_SCROLL_SPEED;
-    }
-    if (mode !== SelectionMode.COLUMN) {
-      if (mouseY > this._grid._canvas.height) dy = EDGE_SCROLL_SPEED;
-      else if (mouseY < this._grid.topHeaderHeight) dy = -EDGE_SCROLL_SPEED;
-    }
-    this._autoScroll.update(dx, dy);
-
-    this.extendToPoint(mouseX, mouseY);
+    const point = this.getPointerCoords(e);
+    this.updateAutoScroll(point.x, point.y);
+    this.extendToPoint(point.x, point.y);
   };
 
-  private extendToPoint(mouseX: number, mouseY: number): void {
+  private updateAutoScroll(x: number, y: number): void {
+    const axes = SELECTION_AXES[this._grid._selection.mode];
+
+    const dx = axes.col ? this.edgeScrollDelta(x, this._grid.leftHeaderWidth, this._grid._canvas.width) : 0;
+    const dy = axes.row ? this.edgeScrollDelta(y, this._grid.topHeaderHeight, this._grid._canvas.height) : 0;
+
+    this._autoScroll.update(dx, dy);
+  }
+
+  private edgeScrollDelta(pos: number, min: number, max: number): number {
+    if (pos < min) return -EDGE_SCROLL_SPEED;
+    if (pos > max) return EDGE_SCROLL_SPEED;
+    return 0;
+  }
+
+  private extendToPoint(x: number, y: number): void {
     const sel = this._grid._selection;
+    const axes = SELECTION_AXES[sel.mode];
 
-    // Clamp the hit-test point into the body so a drag past the edge still
-    // resolves to the last real row/col (the AutoScroll ticker handles
-    // actually moving the viewport).
-    const clampedX = Math.min(Math.max(mouseX, this._grid.leftHeaderWidth), this._grid._canvas.width - 1);
-    const clampedY = Math.min(Math.max(mouseY, this._grid.topHeaderHeight), this._grid._canvas.height - 1);
+    // Clamp into the body so a drag past the edge still resolves to the
+    // last real row/col — AutoScroll is what actually moves the viewport.
+    const clampedX = clamp(x, this._grid.leftHeaderWidth, this._grid._canvas.width - 1);
+    const clampedY = clamp(y, this._grid.topHeaderHeight, this._grid._canvas.height - 1);
 
-    if (sel.mode === SelectionMode.COLUMN) {
+    if (axes.col) {
       const { colIndex } = this._grid._canvasMaths.getColAtX(clampedX, false);
       if (colIndex !== -1) sel.focusCol = colIndex;
-    } else if (sel.mode === SelectionMode.ROW) {
+    }
+
+    if (axes.row) {
       const { rowIndex } = this._grid._canvasMaths.getRowAtY(clampedY, false);
-      if (rowIndex !== -1) sel.focusRow = rowIndex;
-    } else if (sel.mode === SelectionMode.CELL) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(clampedX, false);
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(clampedY, false);
-      if (colIndex !== -1) sel.focusCol = colIndex;
       if (rowIndex !== -1) sel.focusRow = rowIndex;
     }
 
-    this._grid.render();
-    this.notifyChange();
+    // No direct render() call — this can fire 100+ times/sec during a drag.
+    this._renderScheduler.request();
   }
 
   private scrollBy(dx: number, dy: number): void {
     const maxScrollX = Math.max(0, this._grid.totalWidth - this._grid._canvas.width);
     const maxScrollY = Math.max(0, this._grid.totalHeight - this._grid._canvas.height);
 
-    this._grid.scrollX = Math.min(Math.max(0, this._grid.scrollX + dx), maxScrollX);
-    this._grid.scrollY = Math.min(Math.max(0, this._grid.scrollY + dy), maxScrollY);
+    this._grid.scrollX = clamp(this._grid.scrollX + dx, 0, maxScrollX);
+    this._grid.scrollY = clamp(this._grid.scrollY + dy, 0, maxScrollY);
 
-    this._grid.render();
+    this._renderScheduler.request();
   }
 
-  private handleMouseUp = (): void => {
+  private handlePointerUp = (): void => {
     this._isDragging = false;
     this._autoScroll.stop();
-    window.removeEventListener("mousemove", this.handleMouseMove);
-    window.removeEventListener("mouseup", this.handleMouseUp);
+
+    if (this._activePointerId !== null) {
+      this._grid._canvas.releasePointerCapture(this._activePointerId);
+      this._activePointerId = null;
+    }
+
+    this._grid._canvas.removeEventListener("pointermove", this.handlePointerMove);
+    this._grid._canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this._grid._canvas.removeEventListener("pointercancel", this.handlePointerUp);
   };
 
   // ==========================================
@@ -150,104 +228,110 @@ export class SelectionManager {
       this._grid._canvas.setAttribute("tabindex", "0");
     }
 
-    this._grid._canvas.addEventListener("keydown", (e: KeyboardEvent) => {
-      const sel = this._grid._selection;
+    this._grid._canvas.addEventListener("keydown", (e: KeyboardEvent) => this.handleKeyDown(e));
+  }
 
-      if (e.key === "Escape") {
-        sel.clear();
-        this._grid.render();
-        this.notifyChange();
-        return;
-      }
+  private handleKeyDown(e: KeyboardEvent): void {
+    const sel = this._grid._selection;
 
-      if (sel.mode === SelectionMode.NONE) return;
+    if (e.key === "Escape") {
+      sel.clear();
+      this._renderScheduler.request();
+      return;
+    }
 
-      const arrowMap: Record<string, [number, number]> = {
-        ArrowRight: [0, 1],
-        ArrowLeft: [0, -1],
-        ArrowDown: [1, 0],
-        ArrowUp: [-1, 0],
-      };
-      const delta = arrowMap[e.key];
-      if (!delta) return;
-      e.preventDefault();
+    const delta = ARROW_DELTAS[e.key];
+    if (!delta || sel.mode === SelectionMode.NONE) return;
 
-      const [dRow, dCol] = delta;
+    const axes = SELECTION_AXES[sel.mode];
+    const [dRow, dCol] = delta;
 
-      if (sel.mode === SelectionMode.COLUMN && dCol !== 0) {
-        const base = e.shiftKey ? sel.focusCol! : sel.anchorCol!;
-        const target = Math.max(1, Math.min(this._grid.columnNo, base + dCol));
-        this.moveSelection(e.shiftKey, undefined, target);
-        this.ensureColVisible(target);
-      } else if (sel.mode === SelectionMode.ROW && dRow !== 0) {
-        const base = e.shiftKey ? sel.focusRow! : sel.anchorRow!;
-        const target = Math.max(1, Math.min(this._grid.rowNo, base + dRow));
-        this.moveSelection(e.shiftKey, target, undefined);
-        this.ensureRowVisible(target);
-      } else if (sel.mode === SelectionMode.CELL) {
-        const baseRow = e.shiftKey ? sel.focusRow! : sel.anchorRow!;
-        const baseCol = e.shiftKey ? sel.focusCol! : sel.anchorCol!;
-        const targetRow = Math.max(1, Math.min(this._grid.rowNo, baseRow + dRow));
-        const targetCol = Math.max(1, Math.min(this._grid.columnNo, baseCol + dCol));
-        this.moveSelection(e.shiftKey, targetRow, targetCol);
-        this.ensureRowVisible(targetRow);
-        this.ensureColVisible(targetCol);
-      }
+    // Same idea as before: ROW mode ignores left/right, COLUMN mode ignores
+    // up/down — but expressed as one axis check instead of a 3-way if/else.
+    if (dRow !== 0 && !axes.row) return;
+    if (dCol !== 0 && !axes.col) return;
 
-      this._grid.render();
-      this.notifyChange();
-    });
+    e.preventDefault();
+
+    const target = this.computeArrowTarget(e.shiftKey, dRow, dCol, axes);
+    this.moveSelection(e.shiftKey, target.row, target.col);
+
+    if (target.row !== undefined) this.ensureRowVisible(target.row);
+    if (target.col !== undefined) this.ensureColVisible(target.col);
+
+    this._renderScheduler.request();
+  }
+
+  private computeArrowTarget(
+    extend: boolean,
+    dRow: number,
+    dCol: number,
+    axes: SelectionAxes,
+  ): { row?: number; col?: number } {
+    const sel = this._grid._selection;
+    const target: { row?: number; col?: number } = {};
+
+    if (axes.row) {
+      const base = extend ? sel.focusRow! : sel.anchorRow!;
+      target.row = clamp(base + dRow, 1, this._grid.rowNo);
+    }
+
+    if (axes.col) {
+      const base = extend ? sel.focusCol! : sel.anchorCol!;
+      target.col = clamp(base + dCol, 1, this._grid.columnNo);
+    }
+
+    return target;
   }
 
   private moveSelection(extend: boolean, row?: number, col?: number): void {
     const sel = this._grid._selection;
-    if (extend) {
-      if (row !== undefined) sel.focusRow = row;
-      if (col !== undefined) sel.focusCol = col;
-    } else {
-      if (row !== undefined) {
-        sel.anchorRow = row;
-        sel.focusRow = row;
-      }
-      if (col !== undefined) {
-        sel.anchorCol = col;
-        sel.focusCol = col;
-      }
+
+    if (!extend) {
+      if (row !== undefined) sel.anchorRow = row;
+      if (col !== undefined) sel.anchorCol = col;
     }
+    if (row !== undefined) sel.focusRow = row;
+    if (col !== undefined) sel.focusCol = col;
   }
 
   // ==========================================
   // Visibility helpers (scroll the target into view)
   // ==========================================
   // Both walk only the *sparse* custom-size cache rather than looping from
-  // row/col 1 up to the target — so jumping to row 90,000 with the keyboard
-  // is O(number of resized rows), not O(90,000).
+  // row/col 1 up to the target — jumping to row 90,000 via keyboard is
+  // O(number of resized rows), not O(90,000).
   private widthUpToCol(colIndex: number): number {
-    let customSum = 0;
-    let customCount = 0;
-    for (const key in this._grid._colState._colDataCache) {
-      const c = Number(key);
-      if (c < colIndex) {
-        customSum += this._grid._colState._colDataCache[c]!.width;
-        customCount++;
-      }
-    }
-    const defaultCols = colIndex - 1 - customCount;
-    return this._grid.leftHeaderWidth + customSum + defaultCols * this._grid.cellWidth;
+    const { sum, count } = this.sumCustomSizes(this._grid._colState._colDataCache, colIndex, "width");
+    const defaultCols = colIndex - 1 - count;
+    return this._grid.leftHeaderWidth + sum + defaultCols * this._grid.cellWidth;
   }
 
   private heightUpToRow(rowIndex: number): number {
-    let customSum = 0;
-    let customCount = 0;
-    for (const key in this._grid._rowState._rowDataCache) {
-      const r = Number(key);
-      if (r < rowIndex) {
-        customSum += this._grid._rowState._rowDataCache[r]!.height;
-        customCount++;
+    const { sum, count } = this.sumCustomSizes(this._grid._rowState._rowDataCache, rowIndex, "height");
+    const defaultRows = rowIndex - 1 - count;
+    return this._grid.topHeaderHeight + sum + defaultRows * this._grid.cellHeight;
+  }
+
+  // Shared by widthUpToCol/heightUpToRow — used to be two near-identical
+  // hand-rolled loops, now one loop parameterized by which size key to read.
+  private sumCustomSizes(
+    cache: Record<number, { width?: number; height?: number }>,
+    upToIndex: number,
+    sizeKey: "width" | "height",
+  ): { sum: number; count: number } {
+    let sum = 0;
+    let count = 0;
+
+    for (const key in cache) {
+      const index = Number(key);
+      if (index < upToIndex) {
+        sum += cache[index]![sizeKey]!;
+        count++;
       }
     }
-    const defaultRows = rowIndex - 1 - customCount;
-    return this._grid.topHeaderHeight + customSum + defaultRows * this._grid.cellHeight;
+
+    return { sum, count };
   }
 
   private ensureColVisible(colIndex: number): void {
@@ -274,12 +358,8 @@ export class SelectionManager {
     }
   }
 
-  private getMouseCoords(e: MouseEvent): { mouseX: number; mouseY: number } {
+  private getPointerCoords(e: PointerEvent): { x: number; y: number } {
     const rect = this._grid._canvas.getBoundingClientRect();
-    return { mouseX: e.clientX - rect.left, mouseY: e.clientY - rect.top };
-  }
-
-  private notifyChange(): void {
-    this._grid.onSelectionChange?.();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 }
