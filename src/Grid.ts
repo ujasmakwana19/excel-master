@@ -1,6 +1,6 @@
 import { CanvasMaths } from "./CanvasMaths.js";
 import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
-import { SelectionManager } from "./EventListener/SelectionManager.js";
+// import { SelectionManager } from "./EventListener/SelectionManager.js";
 import { CanvasScrollEventOpertion } from "./EventListener/CanvasScrollEvent.js";
 import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
 import { Cell } from "./DB/cell.js";
@@ -23,7 +23,7 @@ export class Grid {
   // Events
   _canvasScroll: CanvasScrollEventOpertion;
   _resizeEvent: ResizeRowColumnEvent;
-  _selectionManager: SelectionManager;
+  // _selectionManager: SelectionManager;
   _pointerEventManager : PointerEventManager
 
   // Grid Paint
@@ -84,7 +84,7 @@ export class Grid {
 
     this._resizeEvent = new ResizeRowColumnEvent(this);
     this._canvasScroll = new CanvasScrollEventOpertion();
-    this._selectionManager = new SelectionManager(this);
+    // this._selectionManager = new SelectionManager(this);
     this._pointerEventManager = new PointerEventManager(this)
 
     this._historyManager = new HistoryManager();
@@ -105,48 +105,48 @@ export class Grid {
     );
 
     // mouse move
-    this._canvas.addEventListener("pointermove", (e) =>
-      this._resizeEvent.handleMouseMove(
-        this._canvas,
-        this,
-        this._renderingEngine,
-        e,
-      ),
-    );
+    // this._canvas.addEventListener("pointermove", (e) =>
+    //   this._resizeEvent.handleMouseMove(
+    //     this._canvas,
+    //     this,
+    //     this._renderingEngine,
+    //     e,
+    //   ),
+    // );
 
     // mouse down
     // Pointer down — resize-handle grab takes priority; otherwise it's a selection.
-    this._canvas.addEventListener("pointerdown", (e: PointerEvent) => {
-      // PointerEvent extends MouseEvent, so this still satisfies ResizeRowColumnEvent's signature.
-      this._resizeEvent.handleMouseDown(e);
+    // this._canvas.addEventListener("pointerdown", (e: PointerEvent) => {
+    //   // PointerEvent extends MouseEvent, so this still satisfies ResizeRowColumnEvent's signature.
+    //   this._resizeEvent.handleMouseDown(e);
  
-      if (!this._resizeEvent.isResizing) {
-        this._selectionManager.handlePointerDown(e);
-      }
-    });
+    //   if (!this._resizeEvent.isResizing) {
+    //     this._selectionManager.handlePointerDown(e);
+    //   }
+    // });
 
     // mouse released
-    window.addEventListener("pointerup", () => this._resizeEvent.handleMouseUp());
+    // window.addEventListener("pointerup", () => this._resizeEvent.handleMouseUp());
 
     // While a cell is actively being edited, so the browser's own
     // native text-input undo (editing keystrokes) takes precedence there.
-    window.addEventListener("keydown", (e) => {
-      if (this._cellEditor.isEditing) return;
-      if (!(e.ctrlKey || e.metaKey)) return;
+    // window.addEventListener("keydown", (e) => {
+    //   if (this._cellEditor.isEditing) return;
+    //   if (!(e.ctrlKey || e.metaKey)) return;
 
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        this._historyManager.undo();
-        this.render();
-        this.onSelectionChange?.();
-      } else if (key === "y" || (key === "z" && e.shiftKey)) {
-        e.preventDefault();
-        this._historyManager.redo();
-        this.render();
-        this.onSelectionChange?.();
-      }
-    });
+    //   const key = e.key.toLowerCase();
+    //   if (key === "z" && !e.shiftKey) {
+    //     e.preventDefault();
+    //     this._historyManager.undo();
+    //     this.render();
+    //     this.onSelectionChange?.();
+    //   } else if (key === "y" || (key === "z" && e.shiftKey)) {
+    //     e.preventDefault();
+    //     this._historyManager.redo();
+    //     this.render();
+    //     this.onSelectionChange?.();
+    //   }
+    // });
   }
 
   // Viewport Resize Manger

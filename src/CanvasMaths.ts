@@ -101,37 +101,31 @@ export class CanvasMaths {
   }
 
   getColAtX(
-    mouseX: number,
-    borderClick: boolean,
-  ): { colIndex: number; borderX: number } {
-    if (mouseX < this._grid.leftHeaderWidth)
-      return { colIndex: -1, borderX: -1};
-
+    XCoordinate: number
+  ): { colIndex: number; isborderX: boolean } {
+    
     const { startCol, totalX, endCol } = this.getColBounds();
 
     let widthTillStartCol = totalX;
 
     for (let c = startCol; c <= endCol; c++) {
-      const colWidth =
-        this._grid._colState.getColWidth(c);
+      const colWidth = this._grid._colState.getColWidth(c);
       const colRightScreenX = widthTillStartCol + colWidth - this._grid.scrollX;
 
-      if (borderClick) {
-        if (Math.abs(mouseX - colRightScreenX) <= this.resizeHitTolerance) {
-          return { colIndex: c, borderX: colRightScreenX };
-        }
-      } else {
-        if (
-          mouseX >= widthTillStartCol + this.selectionHitTolerance - this._grid.scrollX &&
-          mouseX <= colRightScreenX - this.selectionHitTolerance
-        ) {
-          return { colIndex: c, borderX: colRightScreenX };
-        }
+      if (Math.abs(XCoordinate - colRightScreenX) <= this.resizeHitTolerance) {
+        return { colIndex: c, isborderX: true };
       }
+      else if (
+        XCoordinate >= widthTillStartCol + this.selectionHitTolerance - this._grid.scrollX &&
+        XCoordinate <= colRightScreenX - this.selectionHitTolerance
+      ) {
+        return { colIndex: c, isborderX: false };
+      }
+
       widthTillStartCol += colWidth;
     }
 
-    return { colIndex: -1, borderX: -1};
+    return { colIndex: -1, isborderX: false};
   }
 
   getRowAtY(

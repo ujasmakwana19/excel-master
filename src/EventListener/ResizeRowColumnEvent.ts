@@ -35,7 +35,7 @@ export class ResizeRowColumnEvent {
     if (mouseY <= this._grid.topHeaderHeight) {
       
       // Col Resizing Interaction
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX, true);
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX);
 
       if (colIndex !== -1) {
         this.isResizing = true;
@@ -93,7 +93,7 @@ export class ResizeRowColumnEvent {
 
     // Check columns first (Top Header Zone)
     if (mouseY <= _grid.topHeaderHeight) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX,  true);
+      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX);
       if (colIndex !== -1) {
         _canvas.style.cursor = "col-resize";
         return;

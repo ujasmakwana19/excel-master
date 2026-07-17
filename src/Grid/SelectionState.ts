@@ -1,3 +1,31 @@
+export type Hit = {
+  COLUMNSELECTION : boolean,
+  ROWSELECTION : boolean,
+  CELLSELECTION : boolean,
+  COLUMNRESIZING : boolean,
+  ROWRESIZING : boolean
+}
+
+export const DEFAULT_HIT : Hit = {
+  COLUMNSELECTION : false,
+  ROWSELECTION : false,
+  CELLSELECTION : false,
+  COLUMNRESIZING : false,
+  ROWRESIZING : false
+}
+
+export type AreaPointerEvent = {
+  CANVAS_TOP_HEADER : boolean,
+  CANVAS_LEFT_HEADER : boolean,
+  CANVAS_CELL_BODY : boolean,
+}
+
+export const DEFAULT_POINTER_AREA : AreaPointerEvent = {
+  CANVAS_TOP_HEADER : false,
+  CANVAS_LEFT_HEADER : false,
+  CANVAS_CELL_BODY : false,
+}
+
 export enum SelectionMode {
   NONE = "none",
   CELL = "cell",
