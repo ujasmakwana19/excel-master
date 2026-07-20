@@ -63,70 +63,13 @@
 //     // 
 //     this._grid._canvas.focus();
 
-//     const point = this.getPointerCoords(e);
-//     const region = this.classifyRegion(point.x, point.y);
-//     const hit = this.hitTestForRegion(region, point.x, point.y);
-//     if (hit === null) return;
+//     
 
 //     this.beginSelection(hit.mode, e.shiftKey, hit.row, hit.col);
 //     this.startDrag(e);
 //   }
 
-//   // Pure geometry — which zone of the grid was clicked. No selection logic here.
-//   private classifyRegion(x: number, y: number): Region {
-//     const inTopHeader = y <= this._grid.topHeaderHeight && x > this._grid.leftHeaderWidth;
-//     const inLeftHeader = x <= this._grid.leftHeaderWidth && y > this._grid.topHeaderHeight;
-//     const inBody = x > this._grid.leftHeaderWidth && y > this._grid.topHeaderHeight;
 
-//     if (inTopHeader) return "topHeader";
-//     if (inLeftHeader) return "leftHeader";
-//     if (inBody) return "body";
-//     return "outside";
-//   }
-
-
-//   private hitTestForRegion(region: Region, x: number, y: number): HitResult | null {
-//     if (region === "topHeader") {
-//       const { colIndex } = this._grid._canvasMaths.getColAtX(x, false);
-//       return colIndex === -1 ? null : { mode: SelectionMode.COLUMN, col: colIndex };
-//     }
-
-//     if (region === "leftHeader") {
-//       const { rowIndex } = this._grid._canvasMaths.getRowAtY(y, false);
-//       return rowIndex === -1 ? null : { mode: SelectionMode.ROW, row: rowIndex };
-//     }
-
-//     if (region === "body") {
-//       const { colIndex } = this._grid._canvasMaths.getColAtX(x, false);
-//       const { rowIndex } = this._grid._canvasMaths.getRowAtY(y, false);
-//       if (colIndex === -1 || rowIndex === -1) return null;
-//       return { mode: SelectionMode.CELL, row: rowIndex, col: colIndex };
-//     }
-
-//     return null;
-//   }
-
-//   private beginSelection(mode: SelectionMode, extend: boolean, row?: number, col?: number): void {
-//     const sel = this._grid._selection;
-//     const sameModeExtend = extend && sel.mode === mode;
-
-//     if (sameModeExtend) {
-//       // Shift+click: keep the existing anchor, move only the focus end.
-//       if (row !== undefined) sel.focusRow = row;
-//       if (col !== undefined) sel.focusCol = col;
-//       return;
-//     }
-
-//     sel.mode = mode;
-//     if (row !== undefined) {
-//       sel.anchorRow = row;
-//       sel.focusRow = row;
-//     }
-//     if (col !== undefined) {
-//       sel.anchorCol = col;
-//       sel.focusCol = col;
-//     }
-//   }
 
 //   private startDrag(e: PointerEvent): void {
 //     this._isDragging = true;

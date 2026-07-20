@@ -14,10 +14,32 @@ export class RowEventHandler {
         return false;
     }
 
-    handleRowEvent(x : number , y : number) : boolean{
-        if(this.isRowEvent(x, y)){
+    private beginSelection(event : PointerEvent , row : number) {
+        const selection = this._grid._selection
+        
+        if(event.shiftKey && selection.anchorRow != null){
+            selection.focusRow = row
+        }
+        else{
+            selection.clear()
+            selection.anchorRow = row
+            selection.focusRow = row
+        }
+        
+    }
+
+    handleRowEvent(event : PointerEvent , x : number , y : number) : boolean{
+        if(!this.isRowEvent(x, y)){
             return false
         }
+
+        const rowIndex = this._grid._canvasMaths.getRowAtY(y)
+
+        if(rowIndex < 0) return false
+
+        this.beginSelection(event, rowIndex)
+
+
         return true
     }
 

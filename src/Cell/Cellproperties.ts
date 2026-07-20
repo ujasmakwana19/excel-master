@@ -1,6 +1,5 @@
 import type { Grid } from "../Grid.js";
 import { DarkGridProperties, DefaultGridProperties, type PaintProperties } from "../Grid/PaintProperties.js";
-import { SelectionMode } from "../Grid/SelectionState.js";
 import { SetCellCommand, BatchCommand } from "../Commands.js";
 import type { CellValue } from "../DB/cell.js";
 import { MAX_CELLS_PER_FORMAT_ACTION } from "../Grid/constants.js";
@@ -46,9 +45,9 @@ export function HandleCellPropertiesToolbar(grid: Grid): void {
 
 export function syncToolbarFromSelection(grid: Grid): void {
   const sel = grid._selection;
-  if (sel.mode !== SelectionMode.CELL || sel.focusRow === null || sel.focusCol === null) return;
+  if (sel.anchorRow === null || sel.anchorCol === null) return;
 
-  const props = grid._cellState.getData(sel.focusRow, sel.focusCol)?.properties;
+  const props = grid._cellState.getData(sel.anchorRow, sel.anchorCol)?.properties;
 
   const fontFamily = document.getElementById("font-family") as HTMLSelectElement;
   const fontSize = document.getElementById("font-size") as HTMLInputElement;
@@ -70,19 +69,8 @@ function getSelectedCells(grid: Grid): Array<[number, number]> {
   const sel = grid._selection;
   const cells: Array<[number, number]> = [];
 
-  let rowRange: [number, number] | null = null;
-  let colRange: [number, number] | null = null;
-
-  if (sel.mode === SelectionMode.CELL) {
-    rowRange = sel.rowRange;
-    colRange = sel.colRange;
-  } else if (sel.mode === SelectionMode.ROW) {
-    rowRange = sel.rowRange;
-    colRange = [1, grid.columnNo];
-  } else if (sel.mode === SelectionMode.COLUMN) {
-    rowRange = [1, grid.rowNo];
-    colRange = sel.colRange;
-  }
+  const rowRange = sel.rowRange;
+  const colRange = sel.colRange;
 
   if (!rowRange || !colRange) return cells;
 

@@ -14,29 +14,29 @@ export class ColumnEventHandler {
         return false;
     }
 
-    private beginSelection(event : PointerEvent , x : number) {
-        // const selection = this._grid._selection
-        // const isShiftPressed
+    private beginSelection(event : PointerEvent , column : number) {
+        const selection = this._grid._selection
+        
+        if(event.shiftKey && selection.anchorCol != null){
+            selection.focusCol = column
+        }
+        else{
+            selection.clear()
+            selection.anchorCol = column
+            selection.focusCol = column
+        }
+        
     }
 
     handleColumnEvent(event : PointerEvent , x : number , y : number) : boolean{
-        if(this.isColumnEvent(x, y)){
+        if(!this.isColumnEvent(x, y)){
             return false
         }
-        console.log(event.ctrlKey + "hhhhh");
-        
-        const {colIndex  , isborderX } = this._grid._canvasMaths.getColAtX(x)
+        const colIndex = this._grid._canvasMaths.getColAtX(x)
 
-        // Resizing Event
-        if(isborderX){
+        if(colIndex < 0)  return false;
 
-        }
-        // Selection Event
-        else{
-
-        }
-
-
+        this.beginSelection(event, colIndex)
         return true
     }
 }

@@ -1,6 +1,5 @@
 import { thresHoldConstants } from "../Grid/constants.js";
 import type { Grid } from "../Grid.js";
-import type { RenderingEngine } from "../RenderingEngine.js";
 
 export class ResizeRowColumnEvent {
   _grid : Grid
@@ -21,103 +20,72 @@ export class ResizeRowColumnEvent {
   constructor(grid : Grid){
     this._grid = grid
   }
-  
 
-  handleMouseDown(
-    event: MouseEvent,
-  ) {
-    const rect = this._grid._canvas.getBoundingClientRect();
-
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-
+  tryStartResize(event: MouseEvent, mouseX: number, mouseY: number): boolean {
     if (mouseY <= this._grid.topHeaderHeight) {
-      
-      // Col Resizing Interaction
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX);
-
+      const colIndex = this._grid._canvasMaths.getBorderAtX(mouseX);
       if (colIndex !== -1) {
         this.isResizing = true;
         this.resizeColIndex = colIndex;
         this.resizeStartX = event.clientX;
         this.resizeStartWidth = this._grid._colState.getColWidth(colIndex);
-
         event.preventDefault();
-        return; // Early return to avoid cross-triggers
+        return true;
       }
     }
 
-    // Row Resizing Interaction
     if (mouseX <= this._grid.leftHeaderWidth) {
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, true);
-
+      const rowIndex = this._grid._canvasMaths.getBorderAtY(mouseY);
       if (rowIndex !== -1) {
         this.isResizing = true;
         this.resizeRowIndex = rowIndex;
         this.resizeStartY = event.clientY;
-        this.resizeStartHeight = this._grid._rowState.getRowHeight(rowIndex)
+        this.resizeStartHeight = this._grid._rowState.getRowHeight(rowIndex);
         event.preventDefault();
+        return true;
       }
-    
     }
+
+    return false;
   }
 
-  handleMouseMove(
-    _canvas: HTMLCanvasElement,
-    _grid: Grid,
-    _renderingEngine: RenderingEngine,
-    event: MouseEvent
-  ) {
+  applyResize(event: MouseEvent): boolean {
+    if (!this.isResizing) return false;
 
-    if (this.isResizing) {
-      if (this.resizeColIndex !== -1) {
-        const deltaX = event.clientX - this.resizeStartX;
-        const newWidth = Math.max(this.minWidth, this.resizeStartWidth + deltaX);
-        _grid._colState.setProperties(this.resizeColIndex, newWidth);
-        _grid.render();
-
-      } else if (this.resizeRowIndex !== -1) {
-        const deltaY = event.clientY - this.resizeStartY;
-        const newHeight = Math.max(this.minHeight, this.resizeStartHeight + deltaY);
-        _grid._rowState.setProperties(this.resizeRowIndex, newHeight);
-        _grid.render();
-      }
-      return; 
+    if (this.resizeColIndex !== -1) {
+      const deltaX = event.clientX - this.resizeStartX;
+      const newWidth = Math.max(this.minWidth, this.resizeStartWidth + deltaX);
+      this._grid._colState.setProperties(this.resizeColIndex, newWidth);
+      return true;
     }
 
-    // Hover State (cursor styling)
-    const rect = _canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    // Check columns first (Top Header Zone)
-    if (mouseY <= _grid.topHeaderHeight) {
-      const { colIndex } = this._grid._canvasMaths.getColAtX(mouseX);
-      if (colIndex !== -1) {
-        _canvas.style.cursor = "col-resize";
-        return;
-      }
+    if (this.resizeRowIndex !== -1) {
+      const deltaY = event.clientY - this.resizeStartY;
+      const newHeight = Math.max(this.minHeight, this.resizeStartHeight + deltaY);
+      this._grid._rowState.setProperties(this.resizeRowIndex, newHeight);
+      return true;
     }
 
-    // Check rows second (Left Header Zone) 
-    if (mouseX <= _grid.leftHeaderWidth) { 
-      const { rowIndex } = this._grid._canvasMaths.getRowAtY(mouseY, true);
-      if (rowIndex !== -1) {
-        _canvas.style.cursor = "row-resize";
-        return;
-      }
-    } 
-
-    // Fallback default
-    _canvas.style.cursor = "default";
+    return false;
   }
 
-  handleMouseUp() {
-    if (this.isResizing) {
-      this.isResizing = false;
-      this.resizeColIndex = -1;
-      this.resizeRowIndex = -1;
+  updateCursor(canvas: HTMLCanvasElement, mouseX: number, mouseY: number): void {
+    if (mouseY <= this._grid.topHeaderHeight && this._grid._canvasMaths.getBorderAtX(mouseX) !== -1) {
+      canvas.style.cursor = "col-resize";
+      return;
     }
+
+    if (mouseX <= this._grid.leftHeaderWidth && this._grid._canvasMaths.getBorderAtY(mouseY) !== -1) {
+      canvas.style.cursor = "row-resize";
+      return;
+    }
+
+    canvas.style.cursor = "default";
+  }
+
+  stopResize(): void {
+    this.isResizing = false;
+    this.resizeColIndex = -1;
+    this.resizeRowIndex = -1;
   }
 }

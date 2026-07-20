@@ -40,6 +40,7 @@ window.addEventListener("DOMContentLoaded", () => {
 	HandleLoadJsonData(gridBuilder)
 	HandleDarkModeToggle(gridBuilder)
 	HandleCellPropertiesToolbar(gridBuilder)
+	renderSelectionStatsToDom(gridBuilder)
 
 	gridBuilder.onSelectionChange = () => {
 		renderSelectionStatsToDom(gridBuilder);
