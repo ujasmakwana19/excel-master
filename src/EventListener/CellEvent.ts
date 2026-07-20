@@ -1,4 +1,5 @@
 import type { Grid } from "../Grid.js";
+import { isCellBody } from "../Grid/constants.js";
 
 export class CellEventHandler {
     private _grid : Grid
@@ -7,12 +8,9 @@ export class CellEventHandler {
         this._grid = grid
     }
 
-    private isCellEvent(x : number , y : number) : boolean {
-        return x >= this._grid.leftHeaderWidth && y >= this._grid.topHeaderHeight;
-    }
-
     private beginSelection(event: PointerEvent, row: number, col: number): void {
         const selection = this._grid._selection
+        selection.isSelecting = true
 
         if (event.shiftKey && selection.anchorRow !== null && selection.anchorCol !== null) {
             selection.focusRow = row
@@ -26,20 +24,31 @@ export class CellEventHandler {
         selection.anchorCol = col
         selection.focusCol = col
     }
-
-    handleCellEvent(event: PointerEvent, x : number , y : number) : boolean{
-        if (!this.isCellEvent(x, y)) {
-            return false
+    
+    handleCellEvent(event: PointerEvent, x : number , y : number) {
+        if (!isCellBody(x, y)) {
+            return;
         }
-
+        
         const rowIndex = this._grid._canvasMaths.getRowAtY(y)
         const colIndex = this._grid._canvasMaths.getColAtX(x)
-
+        
         if (rowIndex === -1 || colIndex === -1) {
-            return false
+            return;
         }
-
+        
         this.beginSelection(event, rowIndex, colIndex)
-        return true
+    }
+    
+    handleExtendCellSelection(x : number, y : number){
+        
+        const colIndex = this._grid._canvasMaths.getColAtX(x)
+        const rowIndex = this._grid._canvasMaths.getRowAtY(y)
+        
+        if (rowIndex === -1 || colIndex === -1) {
+            return ;
+        }
+        this._grid._selection.focusCol = colIndex
+        this._grid._selection.focusRow = rowIndex
     }
 }

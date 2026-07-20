@@ -1,11 +1,56 @@
+import type { Grid } from "../Grid.js";
+import { EDGE_SCROLL_SPEED, thresHoldConstants } from "../Grid/constants.js";
+import { clamp, type PointerEventManager } from "./PointerEventManager.js";
+import type { RenderScheduler } from "./RenderScheduler.js";
+
 export class AutoScroll {
+  
+  private _grid : Grid
+  private _pointEvent : PointerEventManager
+  private _renderScheduler : RenderScheduler
+
+  // It is Used to track the animation going on
   private rafId: number | null = null;
+  
   private dx = 0;
   private dy = 0;
 
-  constructor(private readonly onTick: (dx: number, dy: number) => void) {}
+  constructor(grid : Grid, pointEvent : PointerEventManager, renderScheduler : RenderScheduler) {
+    this._grid = grid
+    this._pointEvent = pointEvent
+    this._renderScheduler = renderScheduler
+  }
 
-  update(dx: number, dy: number): void {
+  private scrollBy(dx: number, dy: number): void {
+    const maxScrollX = Math.max(0, this._grid.totalWidth - this._grid._canvas.width);
+    const maxScrollY = Math.max(0, this._grid.totalHeight - this._grid._canvas.height);
+
+    this._grid.scrollX = clamp(this._grid.scrollX + dx, 0, maxScrollX);
+    this._grid.scrollY = clamp(this._grid.scrollY + dy, 0, maxScrollY);
+
+    this._renderScheduler.request();
+  }
+
+  updateAutoScroll(x: number, y: number): void {
+      let dx = this.edgeScrollDelta(x, this._grid.leftHeaderWidth, this._grid._canvas.width - thresHoldConstants.edge_operation)
+      let dy = this.edgeScrollDelta(y, this._grid.topHeaderHeight, this._grid._canvas.height - thresHoldConstants.edge_operation)
+
+      if(this._grid._selection.anchorRow == null){
+        dy = 0
+      }
+      else if (this._grid._selection.anchorCol == null){
+        dx = 0
+      }
+      this.update(dx, dy)
+    }
+
+    private edgeScrollDelta(pos: number, min: number, max: number): number {
+        if (pos < min) return -EDGE_SCROLL_SPEED
+        if (pos > max) return EDGE_SCROLL_SPEED
+        return 0
+    }
+
+  private update(dx: number, dy: number): void {
     this.dx = dx;
     this.dy = dy;
 
@@ -18,7 +63,7 @@ export class AutoScroll {
 
   private loop = (): void => {
     if (this.dx !== 0 || this.dy !== 0) {
-      this.onTick(this.dx, this.dy);
+      this.scrollBy(this.dx, this.dy);
       this.rafId = requestAnimationFrame(this.loop);
     } else {
       this.rafId = null;

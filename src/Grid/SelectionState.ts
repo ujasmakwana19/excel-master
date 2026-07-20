@@ -1,7 +1,8 @@
 export type Range = [number, number]; 
 
 export class SelectionState {
-
+  isResizing : boolean = false
+  isSelecting : boolean = false
   anchorRow: number | null = null;
   focusRow: number | null = null;
   anchorCol: number | null = null;
@@ -26,40 +27,4 @@ export class SelectionState {
       return null;
     return [Math.min(this.anchorCol, this.focusCol), Math.max(this.anchorCol, this.focusCol)];
   }
-
-  // isRowSelected(r: number): boolean {
-  //   console.log({anchorRow : this.anchorRow, focusRow : this.focusRow, anchorCol : this.anchorCol, focusCol : this.focusCol });
-  //   if (this.mode !== SelectionMode.ROW) return false;
-  //   const range = this.rowRange;
-  //   if(range !== undefined && range !== null){
-  //     return r >= range[0] && r <= range[1];
-  //   } 
-  //   return false;
-  // }
-
-  // isColSelected(c: number): boolean {
-  //   console.log({anchorRow : this.anchorRow, focusRow : this.focusRow, anchorCol : this.anchorCol, focusCol : this.focusCol });
-  //   if (this.mode !== SelectionMode.COLUMN) return false;
-  //   const range = this.colRange;
-  //   if(range!== undefined && range!== null){
-  //     return c >= range[0] && c <= range[1];
-  //   }
-  //   return false;
-  // }
-
-  // isCellSelected(r: number, c: number): boolean {
-  //   console.log({anchorRow : this.anchorRow, focusRow : this.focusRow, anchorCol : this.anchorCol, focusCol : this.focusCol });
-  //   if (this.mode !== SelectionMode.CELL) return false;
-  //   const rowRange = this.rowRange;
-  //   const colRange = this.colRange;
-
-  //   if(
-  //     rowRange !== undefined && rowRange !== null && 
-  //     colRange !== undefined && colRange !== null
-  //   ){
-  //     return r >= rowRange[0] && r <= rowRange[1] && 
-  //     c >= colRange[0] && c <= colRange[1];
-  //   }
-  //   return false
-  // }
 }

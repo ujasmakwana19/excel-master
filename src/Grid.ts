@@ -2,7 +2,6 @@ import { CanvasMaths } from "./CanvasMaths.js";
 import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
 // import { SelectionManager } from "./EventListener/SelectionManager.js";
 import { CanvasScrollEventOpertion } from "./EventListener/CanvasScrollEvent.js";
-import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
 import { Cell } from "./DB/cell.js";
 import { Column } from "./DB/column.js";
 import { Row } from "./DB/row.js";
@@ -22,7 +21,6 @@ export class Grid {
 
   // Events
   _canvasScroll: CanvasScrollEventOpertion;
-  _resizeEvent: ResizeRowColumnEvent;
   // _selectionManager: SelectionManager;
   _pointerEventManager : PointerEventManager
 
@@ -82,9 +80,7 @@ export class Grid {
 
     this._renderingEngine = new RenderingEngine(this);
 
-    this._resizeEvent = new ResizeRowColumnEvent(this);
     this._canvasScroll = new CanvasScrollEventOpertion();
-    // this._selectionManager = new SelectionManager(this);
     this._pointerEventManager = new PointerEventManager(this)
 
     this._historyManager = new HistoryManager();

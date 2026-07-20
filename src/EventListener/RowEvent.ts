@@ -1,4 +1,5 @@
 import type { Grid } from "../Grid.js";
+import { isRowHeader } from "../Grid/constants.js";
 
 export class RowEventHandler {
     private _grid : Grid
@@ -7,15 +8,9 @@ export class RowEventHandler {
         this._grid = grid
     }
 
-    private isRowEvent(x : number , y : number) : boolean {
-        if(x <= this._grid.leftHeaderWidth && y >= this._grid.topHeaderHeight){
-            return true;
-        }
-        return false;
-    }
-
     private beginSelection(event : PointerEvent , row : number) {
         const selection = this._grid._selection
+        selection.isSelecting = true
         
         if(event.shiftKey && selection.anchorRow != null){
             selection.focusRow = row
@@ -28,22 +23,26 @@ export class RowEventHandler {
         
     }
 
-    handleRowEvent(event : PointerEvent , x : number , y : number) : boolean{
-        if(!this.isRowEvent(x, y)){
-            return false
+    handleRowEvent(event : PointerEvent , x : number , y : number) {
+        if(!isRowHeader(x, y)){
+            return;
         }
 
         const rowIndex = this._grid._canvasMaths.getRowAtY(y)
 
-        if(rowIndex < 0) return false
+        if(rowIndex < 0) return;
 
         this.beginSelection(event, rowIndex)
-
-
-        return true
     }
 
+    handleExtendRowSelection(y : number){
+        if(this._grid._selection.anchorRow == null || this._grid._selection.anchorCol != null){
+            return;
+        }
 
-
+        const rowIndex = this._grid._canvasMaths.getRowAtY(y)
+        if(rowIndex > 0)
+            this._grid._selection.focusRow = rowIndex
+    }
 
 }

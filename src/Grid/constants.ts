@@ -15,14 +15,36 @@ export const Defaults = {
 
 export const thresHoldConstants = {
 	resizeHitTolerance : 4,
-	selectionHitTolerance : 2,
+	selectionHitTolerance : 4,
 	minWidth : 30,
-	minHeight : 25
+	minHeight : 25,
+	edge_operation : 2
 } 
 
-export const MAX_HISTORY = 200;
-export const EDGE_SCROLL_SPEED = 12;
+export const MAX_HISTORY  = 200;
+export const EDGE_SCROLL_SPEED = 3.5;
 export const MAX_CELLS_PER_FORMAT_ACTION = 20000;
+
+export function isColumnHeader(x : number , y : number) : boolean {
+	if(x >= HeaderConstants.LEFTWIDTH 
+		&& y <= HeaderConstants.TOPHEIGHT)
+		return true
+	return false
+}
+
+export function isRowHeader(x : number , y : number) : boolean {
+	if(x <= HeaderConstants.LEFTWIDTH 
+		&& y >= HeaderConstants.TOPHEIGHT)
+		return true
+	return false
+}
+
+export function isCellBody(x : number , y : number) : boolean {
+	if(x > HeaderConstants.LEFTWIDTH 
+		&& y > HeaderConstants.TOPHEIGHT)
+		return true
+	return false
+}
 
 
 
