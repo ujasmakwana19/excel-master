@@ -22,7 +22,7 @@ export const thresHoldConstants = {
 } 
 
 export const MAX_HISTORY  = 200;
-export const EDGE_SCROLL_SPEED = 3.5;
+export const EDGE_SCROLL_SPEED = 6;
 export const MAX_CELLS_PER_FORMAT_ACTION = 20000;
 
 export function isColumnHeader(x : number , y : number) : boolean {
@@ -46,5 +46,8 @@ export function isCellBody(x : number , y : number) : boolean {
 	return false
 }
 
+export function clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max)
+}
 
 

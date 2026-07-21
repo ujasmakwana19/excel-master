@@ -1,12 +1,11 @@
 import type { Grid } from "../Grid.js";
-import { EDGE_SCROLL_SPEED, thresHoldConstants } from "../Grid/constants.js";
-import { clamp, type PointerEventManager } from "./PointerEventManager.js";
+import { clamp, EDGE_SCROLL_SPEED, thresHoldConstants } from "../Grid/constants.js";
+import { type PointerEventManager } from "./PointerEventManager.js";
 import type { RenderScheduler } from "./RenderScheduler.js";
 
 export class AutoScroll {
   
   private _grid : Grid
-  private _pointEvent : PointerEventManager
   private _renderScheduler : RenderScheduler
 
   // It is Used to track the animation going on
@@ -15,9 +14,8 @@ export class AutoScroll {
   private dx = 0;
   private dy = 0;
 
-  constructor(grid : Grid, pointEvent : PointerEventManager, renderScheduler : RenderScheduler) {
+  constructor(grid : Grid, renderScheduler : RenderScheduler) {
     this._grid = grid
-    this._pointEvent = pointEvent
     this._renderScheduler = renderScheduler
   }
 
@@ -35,10 +33,10 @@ export class AutoScroll {
       let dx = this.edgeScrollDelta(x, this._grid.leftHeaderWidth, this._grid._canvas.width - thresHoldConstants.edge_operation)
       let dy = this.edgeScrollDelta(y, this._grid.topHeaderHeight, this._grid._canvas.height - thresHoldConstants.edge_operation)
 
-      if(this._grid._selection.anchorRow == null){
+      if(y === -1){
         dy = 0
       }
-      else if (this._grid._selection.anchorCol == null){
+      else if (x === -1){
         dx = 0
       }
       this.update(dx, dy)

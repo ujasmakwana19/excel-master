@@ -1,8 +1,6 @@
 export type Range = [number, number]; 
 
 export class SelectionState {
-  isResizing : boolean = false
-  isSelecting : boolean = false
   anchorRow: number | null = null;
   focusRow: number | null = null;
   anchorCol: number | null = null;
