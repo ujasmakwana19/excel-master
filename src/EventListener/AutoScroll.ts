@@ -19,6 +19,7 @@ export class AutoScroll {
     this._renderScheduler = renderScheduler
   }
 
+  // main method called in loop to change the value of the scrollX and scrollY
   private scrollBy(dx: number, dy: number): void {
     const maxScrollX = Math.max(0, this._grid.totalWidth - this._grid._canvas.width);
     const maxScrollY = Math.max(0, this._grid.totalHeight - this._grid._canvas.height);
@@ -42,6 +43,7 @@ export class AutoScroll {
       this.update(dx, dy)
     }
 
+    // It returns the change to do in the x and y
     private edgeScrollDelta(pos: number, min: number, max: number): number {
         if (pos < min) return -EDGE_SCROLL_SPEED
         if (pos > max) return EDGE_SCROLL_SPEED
@@ -59,6 +61,7 @@ export class AutoScroll {
     }
   }
 
+  // loop to change the x, y
   private loop = (): void => {
     if (this.dx !== 0 || this.dy !== 0) {
       this.scrollBy(this.dx, this.dy);
@@ -68,6 +71,7 @@ export class AutoScroll {
     }
   };
 
+  // to stop the loop
   stop(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);

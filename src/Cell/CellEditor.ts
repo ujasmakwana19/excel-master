@@ -20,7 +20,7 @@ export class CellEditor {
 		this.input.type = "text";
 		this.input.style.position = "absolute";
 		this.input.style.boxSizing = "border-box";
-		this.input.style.border = "2px solid #1a73e8";
+		this.input.style.border = "8px solid #1a73e8";
 		this.input.style.outline = "none";
 		this.input.style.padding = "0 4px";
 		this.input.style.font = "14px Arial, sans-serif";

@@ -1,13 +1,13 @@
 import type { Grid } from "../Grid.js"
 import { AutoScroll } from "./AutoScroll.js"
-import { CellEventHandler } from "../EventHandler/CellEvent.js"
-import { ColumnEventHandler } from "../EventHandler/ColumnEvent.js"
-import { cursorShape } from "../EventHandler/DynamicGraphicsHandler.js"
-import type { PointerEventInterface } from "../EventHandler/PointerEventInterface.js"
+import { CellEventHandler } from "../PointerEventHandler/CellEvent.js"
+import { ColumnEventHandler } from "../PointerEventHandler/ColumnEvent.js"
+import { cursorShape } from "../PointerEventHandler/DynamicGraphicsHandler.js"
+import type { PointerEventInterface } from "../PointerEventHandler/PointerEventInterface.js"
 import { RenderScheduler } from "./RenderScheduler.js"
-import { ResizeColumnEvent } from "../EventHandler/ResizeColumnEvent.js"
-import { ResizeRowEvent } from "../EventHandler/ResizeRowEvent.js"
-import { RowEventHandler } from "../EventHandler/RowEvent.js"
+import { ResizeColumnEvent } from "../PointerEventHandler/ResizeColumnEvent.js"
+import { ResizeRowEvent } from "../PointerEventHandler/ResizeRowEvent.js"
+import { RowEventHandler } from "../PointerEventHandler/RowEvent.js"
 
 
 

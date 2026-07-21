@@ -214,4 +214,31 @@ export class CanvasMaths {
       height,
     };
   }
+
+  ensureColVisible(colIndex: number): void {
+    const x = this._grid._colState.calculateWidthUptoX(colIndex); 
+    const colWidth = this._grid._colState.getColWidth(colIndex);
+    const viewWidth = this._grid._canvas.width - this._grid.leftHeaderWidth;
+
+    if (x < this._grid.scrollX) {
+        this._grid.scrollX = x;
+    } 
+    else if (x + colWidth > this._grid.scrollX + viewWidth) {
+        this._grid.scrollX = (x + colWidth) - viewWidth;
+    }
+  }
+
+  ensureRowVisible(rowIndex: number): void {
+    const y = this._grid._rowState.calculateHeightUptoY(rowIndex); 
+    const rowHeight = this._grid._rowState.getRowHeight(rowIndex);
+    const viewHeight = this._grid._canvas.height - this._grid.topHeaderHeight;
+
+    if (y < this._grid.scrollY) {
+        this._grid.scrollY = y;
+    } 
+    else if (y + rowHeight > this._grid.scrollY + viewHeight) {
+        this._grid.scrollY = (y + rowHeight) - viewHeight;
+    }
+  }
+
 }

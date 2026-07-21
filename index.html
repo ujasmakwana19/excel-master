@@ -164,6 +164,9 @@
             left: 0;
             display: block;
         }
+        canvas:focus {
+            outline: none;
+        }
 
        
         .app-footer {
@@ -263,7 +266,7 @@
         </nav>
 
         <main class="app-content" id="canvas-container">
-            <canvas id="myCanvas"></canvas>
+            <canvas id="myCanvas" tabindex="0"></canvas>
         </main>
 
         <footer class="app-footer">

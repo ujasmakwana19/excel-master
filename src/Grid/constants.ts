@@ -50,4 +50,9 @@ export function clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max)
 }
 
-
+export const arrowMap: Record<string, [number, number]> = {
+    ArrowRight: [0, 1],
+    ArrowLeft: [0, -1],
+    ArrowDown: [1, 0],
+    ArrowUp: [-1, 0],
+};

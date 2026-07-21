@@ -11,6 +11,7 @@ import { SelectionState } from "./Grid/SelectionState.js";
 import { HistoryManager } from "./HistoryManager.js";
 import { CellEditor } from "./Cell/CellEditor.js";
 import { PointerEventManager } from "./EventListener/PointerEventManager.js";
+import { KeyEventManager } from "./EventListener/KeyEventManager.js";
 
 export class Grid {
   _canvas: HTMLCanvasElement;
@@ -23,6 +24,7 @@ export class Grid {
   _canvasScroll: CanvasScrollEventOpertion;
   // _selectionManager: SelectionManager;
   _pointerEventManager : PointerEventManager
+  _keyboardEventManager : KeyEventManager
 
   // Grid Paint
   _paintEngine: PaintEngine;
@@ -82,6 +84,7 @@ export class Grid {
 
     this._canvasScroll = new CanvasScrollEventOpertion();
     this._pointerEventManager = new PointerEventManager(this)
+    this._keyboardEventManager = new KeyEventManager(this)
 
     this._historyManager = new HistoryManager();
     this._cellEditor = new CellEditor(this);
