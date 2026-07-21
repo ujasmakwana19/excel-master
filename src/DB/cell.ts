@@ -45,18 +45,6 @@ export class Cell {
 		};
 	}
 
-	setCellProperties(
-		row: number,
-		col: number,
-		properties: Partial<PaintProperties>,
-	): void {
-		const existing = this._cellDataCache[this.cellId(row, col)];
-		this._cellDataCache[this.cellId(row, col)] = {
-			text: existing?.text ?? "",
-			properties: { ...(existing?.properties ?? DefaultGridProperties), ...properties },
-		};
-	}
-
 	clearCell(row: number, col: number): void {
 		delete this._cellDataCache[this.cellId(row, col)];
 	}

@@ -10,7 +10,7 @@ export class ColumnKeyEventHandler implements KeyBoardEvents{
     }
 
     private handleCol(delta : [number, number]) : number{
-        const nextCol = Math.max(1, ((this._grid._selection.focusCol ?? 0) + delta[1]));
+        const nextCol = Math.max(1, Math.min(this._grid.columnNo, ((this._grid._selection.focusCol ?? 0) + delta[1])));
         this._grid._canvasMaths.ensureColVisible(nextCol)
         
         return nextCol

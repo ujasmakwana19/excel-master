@@ -1,51 +1,27 @@
 import { SetCellCommand } from "../Commands.js";
 import type { CellValue } from "../DB/cell.js";
 import type { Grid } from "../Grid.js";
+import { setInputFieldProps, setOnEditCellProps } from "./InputField.js";
 
 export class CellEditor {
-	private readonly grid: Grid;
+	private readonly _grid: Grid;
 	private readonly input: HTMLInputElement;
 
-	private editingRow: number | null = null;
-	private editingCol: number | null = null;
-
-	get isEditing(): boolean {
-		return this.editingRow !== null && this.editingCol !== null;
-	}
+	isEditing : boolean = false
 
 	constructor(grid: Grid) {
-		this.grid = grid;
+		this._grid = grid;
 
 		this.input = document.createElement("input");
-		this.input.type = "text";
-		this.input.style.position = "absolute";
-		this.input.style.boxSizing = "border-box";
-		this.input.style.border = "8px solid #1a73e8";
-		this.input.style.outline = "none";
-		this.input.style.padding = "0 4px";
-		this.input.style.font = "14px Arial, sans-serif";
-		this.input.style.display = "none";
-		this.input.style.zIndex = "10";
+		setInputFieldProps(this.input, this._grid.darkMode)
 
-		this.grid._canvas.parentElement?.appendChild(this.input);
+		this._grid._canvas.parentElement?.appendChild(this.input);
 
 		this.input.addEventListener("keydown", (e) => this.handleEditorKeydown(e));
 		this.input.addEventListener("blur", () => this.commit());
 
-		this.grid._canvas.addEventListener("dblclick", () => this.startEditFromAnchor(true));
-		this.grid._canvas.addEventListener("keydown", (e) => this.handleGridKeydown(e));
-	}
-
-	private getAnchorCell(): { row: number; col: number } | null {
-		const sel = this.grid._selection;
-		if (sel.anchorRow === null || sel.anchorCol === null) return null;
-		return { row: sel.anchorRow, col: sel.anchorCol };
-	}
-
-	private startEditFromAnchor(keepExisting: boolean, initialChar?: string): void {
-		const anchor = this.getAnchorCell();
-		if (!anchor) return;
-		this.beginEdit(anchor.row, anchor.col, keepExisting, initialChar);
+		this._grid._canvas.addEventListener("dblclick", () => this.beginEdit(true));
+		this._grid._canvas.addEventListener("keydown", (e) => this.handleGridKeydown(e));
 	}
 
 	private handleGridKeydown(e: KeyboardEvent): void {
@@ -53,32 +29,33 @@ export class CellEditor {
 
 		if (e.key === "F2" || e.key === "Enter") {
 			e.preventDefault();
-			this.startEditFromAnchor(true);
-			return;
+			this.beginEdit(true);
 		}
-
-		if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+		else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
 			e.preventDefault();
-			this.startEditFromAnchor(false, e.key);
+			this.beginEdit(false, e.key);
 		}
 	}
 
-	private beginEdit(row: number, col: number, keepExisting: boolean, initialChar?: string): void {
-		const rect = this.grid._canvasMaths.getCellRect(row, col);
+	private beginEdit(keepExisting: boolean, initialChar?: string): void {
+		
+		const row = this._grid._selection.anchorRow ?? 1
+		const col = this._grid._selection.anchorCol ?? 1
+
+		const rect = this._grid._canvasMaths.getCellRect(row, col);
 		if (!rect) return;
 
-		const existing = this.grid._cellState.getData(row, col);
-		this.editingRow = row;
-		this.editingCol = col;
+		this.isEditing = true
 
+		const existing = this._grid._cellState.getData(row, col);
+		
 		this.input.style.left = `${rect.x}px`;
 		this.input.style.top = `${rect.y}px`;
 		this.input.style.width = `${rect.width}px`;
 		this.input.style.height = `${rect.height}px`;
 		this.input.style.display = "block";
-		this.input.style.backgroundColor =
-			existing?.properties?.backgroundcolor ?? (this.grid.darkMode ? "#202124" : "#ffffff");
-		this.input.style.color = existing?.properties?.fontcolor ?? (this.grid.darkMode ? "#e8eaed" : "#202124");
+		
+		setOnEditCellProps(this.input, existing , this._grid.darkMode)
 
 		this.input.value = initialChar ?? (keepExisting ? existing?.text ?? "" : "");
 		this.input.focus();
@@ -105,12 +82,11 @@ export class CellEditor {
 	}
 
 	private commit(): void {
-		if (this.editingRow === null || this.editingCol === null) return;
+		const row = this._grid._selection.anchorRow ?? 1
+		const col = this._grid._selection.anchorCol ?? 1
 
-		const row = this.editingRow;
-		const col = this.editingCol;
+		const before = this._grid._cellState.getData(row, col);
 
-		const before = this.grid._cellState.getData(row, col);
 		const prev: CellValue | undefined = before ? { ...before } : undefined;
 		const text = this.input.value;
 		const next: CellValue | undefined =
@@ -119,46 +95,48 @@ export class CellEditor {
 		this.hide();
 
 		if (JSON.stringify(prev) === JSON.stringify(next)) {
-			this.grid._canvas.focus();
+			this._grid._canvas.focus();
 			return;
 		}
 
-		this.grid._historyManager.do(new SetCellCommand(this.grid._cellState, row, col, prev, next));
-		this.grid._renderingEngine.renderSingleCell(row, col);
-		this.grid.onSelectionChange?.();
-		this.grid._canvas.focus();
+		this._grid._historyManager.do(new SetCellCommand(this._grid._cellState, row, col, prev, next));
+		this._grid._renderingEngine.renderSingleCell(row, col);
+		this._grid.onSelectionChange?.();
+		this._grid._canvas.focus();
 	}
 
 	private cancel(): void {
-		const row = this.editingRow;
-		const col = this.editingCol;
+		const row = this._grid._selection.anchorRow ?? 1
+		const col = this._grid._selection.anchorCol ?? 1
+		
 		this.hide();
+		
 		if (row !== null && col !== null) {
-			this.grid._renderingEngine.renderSingleCell(row, col);
+			this._grid._renderingEngine.renderSingleCell(row, col);
 		}
-		this.grid._canvas.focus();
+
+		this._grid._canvas.focus();
 	}
 
 	private hide(): void {
 		this.input.style.display = "none";
-		this.editingRow = null;
-		this.editingCol = null;
+		this.isEditing = false;
 	}
 
 	private moveAnchor(dRow: number, dCol: number): void {
-		const anchor = this.getAnchorCell();
-		if (!anchor) return;
+		const row = this._grid._selection.anchorRow ?? 1
+		const col = this._grid._selection.anchorCol ?? 1
 
-		const targetRow = Math.max(1, Math.min(this.grid.rowNo, anchor.row + dRow));
-		const targetCol = Math.max(1, Math.min(this.grid.columnNo, anchor.col + dCol));
+		const targetRow = Math.max(1, Math.min(this._grid.rowNo, row + dRow));
+		const targetCol = Math.max(1, Math.min(this._grid.columnNo, col + dCol));
 
-		this.grid._selection.anchorRow = targetRow;
-		this.grid._selection.focusRow = targetRow;
-		this.grid._selection.anchorCol = targetCol;
-		this.grid._selection.focusCol = targetCol;
+		this._grid._selection.anchorRow = targetRow;
+		this._grid._selection.focusRow = targetRow;
+		this._grid._selection.anchorCol = targetCol;
+		this._grid._selection.focusCol = targetCol;
 
-		this.grid.render();
-		this.grid.onSelectionChange?.();
-		this.grid._canvas.focus();
+		this._grid.render();
+		this._grid.onSelectionChange?.();
+		this._grid._canvas.focus();
 	}
 }

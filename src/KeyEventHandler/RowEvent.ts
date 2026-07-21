@@ -10,7 +10,7 @@ export class RowKeyEventHandler implements KeyBoardEvents{
     }
 
     private handleRow(delta : [number, number]) : number{
-        const nextRow = Math.max(1, ((this._grid._selection.focusRow ?? 0) + delta[0]));
+        const nextRow = Math.max(1, Math.min(this._grid.rowNo ,((this._grid._selection.focusRow ?? 0) + delta[0])));
         this._grid._canvasMaths.ensureRowVisible(nextRow)
         
         return nextRow

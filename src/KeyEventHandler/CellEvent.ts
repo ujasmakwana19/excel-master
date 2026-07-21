@@ -10,8 +10,8 @@ export class CellKeyEventHandler implements KeyBoardEvents{
     }
 
     private handleCell(delta : [number, number]) : {nextCol : number, nextRow : number}{
-        const nextColIndex = Math.max(1, ((this._grid._selection.focusCol ?? 0) + delta[1]));
-        const nextRowIndex = Math.max(1, ((this._grid._selection.focusRow ?? 0) + delta[0]));
+        const nextColIndex = Math.max(1, Math.min(this._grid.columnNo,((this._grid._selection.focusCol ?? 0) + delta[1])));
+        const nextRowIndex = Math.max(1, Math.min(this._grid.rowNo,((this._grid._selection.focusRow ?? 0) + delta[0])));
         
         this._grid._canvasMaths.ensureColVisible(nextColIndex)
         this._grid._canvasMaths.ensureRowVisible(nextRowIndex)
