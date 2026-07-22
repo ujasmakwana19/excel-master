@@ -1,8 +1,8 @@
-import { Defaults, GridConstants, HeaderConstants } from "../Grid/constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../GridUtils/constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
-} from "../Grid/PaintProperties.js";
+} from "../GridUtils/PaintProperties.js";
 
 export type RowData = {
 	[key: number]: {

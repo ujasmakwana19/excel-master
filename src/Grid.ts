@@ -1,13 +1,12 @@
-import { CanvasMaths } from "./CanvasMaths.js";
-import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
-// import { SelectionManager } from "./EventListener/SelectionManager.js";
+import { CanvasMaths } from "./GridUtils/CanvasMaths.js";
+import { Defaults, GridConstants, HeaderConstants } from "./GridUtils/constants.js";
 import { CanvasScrollEventOpertion } from "./EventListener/CanvasScrollEvent.js";
 import { Cell } from "./DB/cell.js";
 import { Column } from "./DB/column.js";
 import { Row } from "./DB/row.js";
 import { PaintEngine } from "./PaintEngine.js";
 import { RenderingEngine } from "./RenderingEngine.js";
-import { SelectionState } from "./Grid/SelectionState.js";
+import { SelectionState } from "./GridUtils/SelectionState.js";
 import { HistoryManager } from "./HistoryManager.js";
 import { CellEditor } from "./Cell/CellEditor.js";
 import { PointerEventManager } from "./EventListener/PointerEventManager.js";
@@ -22,7 +21,6 @@ export class Grid {
 
   // Events
   _canvasScroll: CanvasScrollEventOpertion;
-  // _selectionManager: SelectionManager;
   _pointerEventManager : PointerEventManager
   _keyboardEventManager : KeyEventManager
 

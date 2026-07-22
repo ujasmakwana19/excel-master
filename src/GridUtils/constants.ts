@@ -56,3 +56,14 @@ export const arrowMap: Record<string, [number, number]> = {
     ArrowDown: [1, 0],
     ArrowUp: [-1, 0],
 };
+
+export function getColLabel(colIndex: number): string {
+	let label = "";
+	let temp = colIndex;
+	while (temp > 0) {
+		let modulo = (temp - 1) % 26;
+		label = String.fromCharCode(65 + modulo) + label;
+		temp = Math.floor((temp - modulo) / 26);
+	}
+	return label;
+}

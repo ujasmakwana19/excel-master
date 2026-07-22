@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js";
-import { clamp, EDGE_SCROLL_SPEED, thresHoldConstants } from "../Grid/constants.js";
+import { clamp, EDGE_SCROLL_SPEED, thresHoldConstants } from "../GridUtils/constants.js";
 import { type PointerEventManager } from "./PointerEventManager.js";
 import type { RenderScheduler } from "./RenderScheduler.js";
 

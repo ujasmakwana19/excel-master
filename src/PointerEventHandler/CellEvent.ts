@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js";
-import { clamp, isCellBody, thresHoldConstants } from "../Grid/constants.js";
+import { clamp, isCellBody, thresHoldConstants } from "../GridUtils/constants.js";
 import type { PointerEventInterface } from "./PointerEventInterface.js";
 
 export class CellEventHandler implements PointerEventInterface{

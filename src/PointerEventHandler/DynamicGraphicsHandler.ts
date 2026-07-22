@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js"
-import { isColumnHeader, isRowHeader } from "../Grid/constants.js"
+import { isColumnHeader, isRowHeader } from "../GridUtils/constants.js"
 
 export function cursorShape(grid : Grid , x : number, y : number) {
         grid._canvas.style.cursor = "default"

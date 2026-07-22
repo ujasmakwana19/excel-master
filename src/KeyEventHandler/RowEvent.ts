@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js";
-import { arrowMap } from "../Grid/constants.js";
+import { arrowMap } from "../GridUtils/constants.js";
 import type { KeyBoardEvents } from "./KeyEventInterface.js";
 
 export class RowKeyEventHandler implements KeyBoardEvents{

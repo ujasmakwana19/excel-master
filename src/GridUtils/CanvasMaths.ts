@@ -1,5 +1,5 @@
-import { thresHoldConstants } from "./Grid/constants.js";
-import type { Grid } from "./Grid.js";
+import { thresHoldConstants } from "./constants.js";
+import type { Grid } from "../Grid.js";
 
 export class CanvasMaths {
   _grid: Grid;

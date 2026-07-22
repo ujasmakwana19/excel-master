@@ -1,5 +1,6 @@
 import type { Grid } from "./Grid.js";
-import { DarkGridProperties, DarkHeaderProperties, DarkHeaderSelectedProperties, DarkSelectedProperties, DefaultGridProperties, DefaultSelectedProperties, HeaderDefaultGridProperties, HeaderDefaultSelectedGridProperties, type PaintProperties } from "./Grid/PaintProperties.js";
+import { getColLabel } from "./GridUtils/constants.js";
+import { DarkGridProperties, DarkHeaderProperties, DarkHeaderSelectedProperties, DarkSelectedProperties, DefaultGridProperties, DefaultSelectedProperties, HeaderDefaultGridProperties, HeaderDefaultSelectedGridProperties, type PaintProperties } from "./GridUtils/PaintProperties.js";
 
 export class PaintEngine {
 	_grid : Grid
@@ -23,7 +24,7 @@ export class PaintEngine {
 			if (row === 0 && col === 0) {
 				headerText = "";
 			} else if (row === 0) {
-				headerText = this.getColLabel(col);
+				headerText = getColLabel(col);
 			} else {
 				headerText = row.toString();
 			}
@@ -123,19 +124,5 @@ export class PaintEngine {
 				x + specificWidth / 2,
 				y + specificHeight / 2,
 			);
-	}
-
-
-
-	// To make the column as the A, B, C, AB, ...
-	private getColLabel(colIndex: number): string {
-		let label = "";
-		let temp = colIndex;
-		while (temp > 0) {
-			let modulo = (temp - 1) % 26;
-			label = String.fromCharCode(65 + modulo) + label;
-			temp = Math.floor((temp - modulo) / 26);
-		}
-		return label;
 	}
 }

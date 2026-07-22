@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js";
-import { isRowHeader, thresHoldConstants } from "../Grid/constants.js";
+import { isRowHeader, thresHoldConstants } from "../GridUtils/constants.js";
 import type { PointerEventInterface } from "./PointerEventInterface.js";
 
 export class ResizeRowEvent implements PointerEventInterface{
