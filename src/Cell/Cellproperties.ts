@@ -1,7 +1,7 @@
 import type { Grid } from "../Grid.js";
 import { DarkGridProperties, DefaultGridProperties, type PaintProperties } from "../GridUtils/PaintProperties.js";
 import { SetCellCommand, BatchCommand } from "../GridUtils/Commands.js";
-import type { CellValue } from "../DB/cell.js";
+import type { CellValue } from "../States/cell.js";
 import { MAX_CELLS_PER_FORMAT_ACTION } from "../GridUtils/constants.js";
 
 

@@ -1,4 +1,4 @@
-import type { CellValue } from "../DB/cell.js";
+import type { CellValue } from "../States/cell.js";
 
 export function setInputFieldProps (input : HTMLInputElement, isDark : boolean = false){
     input.type = "text";
