@@ -1,6 +1,8 @@
 # Excel Grid Task
 
 ## Architecture Overview
+<img width="6452" height="10323" alt="Excel" src="https://github.com/user-attachments/assets/5a993ace-a1bd-4576-a4c4-be0180595d2d" />
+
 
 ### 1. State & Configuration
 * **States**: Tracks cell data, row dimensions, column widths, and selection ranges (`anchorRow`, `anchorCol`, `focusRow`, `focusCol`).
