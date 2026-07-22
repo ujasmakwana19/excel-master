@@ -1,6 +1,6 @@
 import { HandleLoadJsonData, HandleDarkModeToggle } from "./EventListener/htmlEventListener.js";
 import { Grid } from "./Grid.js";
-import { renderSelectionStatsToDom } from "./Grid/SelectionStats.js";
+import { renderSelectionStatsToDom } from "./GridUtils/SelectionStats.js";
 import { HandleCellPropertiesToolbar, syncToolbarFromSelection } from "./Cell/Cellproperties.js";
 
 class Main {
@@ -40,9 +40,8 @@ window.addEventListener("DOMContentLoaded", () => {
 	HandleLoadJsonData(gridBuilder)
 	HandleDarkModeToggle(gridBuilder)
 	HandleCellPropertiesToolbar(gridBuilder)
+	renderSelectionStatsToDom(gridBuilder)
 
-	// Refresh the footer's Sum/Avg/Min/Max/Count and sync the formatting
-	// toolbar whenever the selection changes.
 	gridBuilder.onSelectionChange = () => {
 		renderSelectionStatsToDom(gridBuilder);
 		syncToolbarFromSelection(gridBuilder);

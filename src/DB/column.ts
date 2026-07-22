@@ -1,8 +1,8 @@
-import { Defaults, GridConstants, HeaderConstants } from "../Grid/constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../GridUtils/constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
-} from "../Grid/PaintProperties.js";
+} from "../GridUtils/PaintProperties.js";
 
 export type ColumnData = {
 	[key: number]: {
@@ -66,4 +66,23 @@ export class Column {
 
 		return ((remainingCols * GridConstants.WIDTH) + sum + HeaderConstants.LEFTWIDTH);
 	}
+	
+	calculateWidthUptoX(colIndex : number): number {
+        if (colIndex <= 1) return 0;
+
+        let customSum = 0;
+        let customCount = 0;
+
+        for (const key in this._colDataCache) {
+            const c = Number(key);
+            if (c < colIndex) {
+                customSum += this._colDataCache[c]?.width ?? 0;
+                customCount++;
+            }
+        }
+
+        const defaultCols = (colIndex - 1) - customCount;
+
+        return customSum + Math.max(0, defaultCols) * GridConstants.WIDTH;
+    }
 }

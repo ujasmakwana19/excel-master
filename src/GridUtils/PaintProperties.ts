@@ -66,8 +66,8 @@ export const DarkHeaderProperties: PaintProperties = {
 
 
 export const DefaultSelectedProperties: PaintProperties = {
-    backgroundcolor: "rgba(26, 115, 232, 0.04)", // Subtle blue transparent fill
-    bordercolor: "#1a73e8",                       // Classic spreadsheet blue outline
+    backgroundcolor: "rgba(26, 115, 232, 0.04)", 
+    bordercolor: "#1a73e8",                       
     borderwidth: 1,
     textalign: "center",
     fontcolor: "#1a73e8",

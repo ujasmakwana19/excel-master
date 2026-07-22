@@ -1,5 +1,4 @@
 import type { Grid } from "./Grid.js";
-import { SelectionMode } from "./Grid/SelectionState.js";
 
 export class RenderingEngine {
   _grid: Grid;
@@ -21,12 +20,15 @@ export class RenderingEngine {
   // =============================================
 
   renderGrid(): void {
+    const grid = this._grid;
+    const ctx = grid._ctx;
+
     // Clear the canvas
-    this._grid._ctx.clearRect(0, 0, this._grid._canvas.width, this._grid._canvas.height);
+    ctx.clearRect(0, 0, grid._canvas.width, grid._canvas.height);
 
     // Calculate virtualization bounds
-    const { startRow, totalY, endRow } = this._grid._canvasMaths.getRowBounds();
-    const { startCol, totalX, endCol } = this._grid._canvasMaths.getColBounds();
+    const { startRow, totalY, endRow } = grid._canvasMaths.getRowBounds();
+    const { startCol, totalX, endCol } = grid._canvasMaths.getColBounds();
 
     this._startRow = startRow;
     this._totalX = totalX;
@@ -36,43 +38,53 @@ export class RenderingEngine {
     this._endCol = endCol;
 
     // Take the snapshot of the current state of the canvas
-    this._grid._ctx.save();
+    ctx.save();
 
     // New state or path for the paint
-    this._grid._ctx.beginPath();
+    ctx.beginPath();
 
     // draws the rect of canvas size
-    this._grid._ctx.rect(
-      this._grid.leftHeaderWidth,
-      this._grid.topHeaderHeight,
-      this._grid._canvas.width,
-      this._grid._canvas.height,
+    ctx.rect(
+      grid.leftHeaderWidth,
+      grid.topHeaderHeight,
+      grid._canvas.width,
+      grid._canvas.height,
     );
 
     // clip the canvas to the rect , so we can only paint in that area
-    this._grid._ctx.clip();
+    ctx.clip();
 
     // Getting the startRow and excluding the row for the Headers
     const dataStartRow: number = Math.max(1, startRow);
     const dataStartCol: number = Math.max(1, startCol);
 
+    const visibleCols: number[] = [];
+    const colWidths: number[] = [];
+    const colStartXs: number[] = [];
+
+    let colCursor = totalX;
+    for (let c = dataStartCol; c <= endCol; c++) {
+      visibleCols.push(c);
+      colStartXs.push(colCursor - grid.scrollX);
+      const width = grid._colState.getColWidth(c);
+      colWidths.push(width);
+      colCursor += width;
+    }
+
     //  Main grid render ->>>>>>>>>>>>>>>>..
     let heightSum: number = totalY;
     for (let r = dataStartRow; r <= endRow; r++) {
-      // Every loop updates the width sum , so the next loop know which pixel to start the paint
-      let widthSum: number = totalX;
       let currentCellHeight: number =
-        this._grid._rowState.getRowHeight(r);
+        grid._rowState.getRowHeight(r);
 
-      for (let c = dataStartCol; c <= endCol; c++) {
-        const startX = widthSum - this._grid.scrollX;
-        const startY = heightSum - this._grid.scrollY;
+      const startY = heightSum - grid.scrollY;
 
-        const currentCellWidth: number = this._grid._colState.getColWidth(c);
-        
-        widthSum += currentCellWidth;
+      for (let i = 0; i < visibleCols.length; i++) {
+        const c = visibleCols[i]!;
+        const startX = colStartXs[i]!;
+        const currentCellWidth = colWidths[i]!;
 
-        this._grid._paintEngine.drawCell(
+        grid._paintEngine.drawCell(
           r,
           c,
           startX,
@@ -86,67 +98,65 @@ export class RenderingEngine {
     }
 
     // restore the state , we save the snapshot before
-    this._grid._ctx.restore();
+    ctx.restore();
 
     // Top Header Paint ->>>>>>>>>>>>
-    this._grid._ctx.save();
-    this._grid._ctx.beginPath();
-    this._grid._ctx.rect(this._grid.leftHeaderWidth, 0, this._grid._canvas.width, this._grid.topHeaderHeight);
-    this._grid._ctx.clip();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(grid.leftHeaderWidth, 0, grid._canvas.width, grid.topHeaderHeight);
+    ctx.clip();
 
-    let widthSum: number = totalX;
-    for (let c = dataStartCol; c <= endCol; c++) {
-      const startX = widthSum - this._grid.scrollX;
-      let currentCellWidth =
-        this._grid._colState.getColWidth(c);
-      widthSum += currentCellWidth;
+    for (let i = 0; i < visibleCols.length; i++) {
+      const c = visibleCols[i]!;
+      const startX = colStartXs[i]!;
+      const currentCellWidth = colWidths[i]!;
 
-      this._grid._paintEngine.drawCell(
+      grid._paintEngine.drawCell(
         0,
         c,
         startX,
         0,
         true,
         currentCellWidth,
-        this._grid.topHeaderHeight,
+        grid.topHeaderHeight,
       );
     }
-    this._grid._ctx.restore();
+    ctx.restore();
 
     // Left Header Paint ->>>>>>>>>>>>>>>
-    this._grid._ctx.save();
-    this._grid._ctx.beginPath();
-    this._grid._ctx.rect(0, this._grid.cellHeight, this._grid.leftHeaderWidth, this._grid._canvas.height);
-    this._grid._ctx.clip();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, grid.cellHeight, grid.leftHeaderWidth, grid._canvas.height);
+    ctx.clip();
 
     heightSum = totalY;
     for (let r = dataStartRow; r <= endRow; r++) {
-      const screenY = heightSum - this._grid.scrollY;
+      const screenY = heightSum - grid.scrollY;
       let currentCellHeight: number =
-        this._grid._rowState.getRowHeight(r);
+        grid._rowState.getRowHeight(r);
       heightSum += currentCellHeight;
 
-      this._grid._paintEngine.drawCell(
+      grid._paintEngine.drawCell(
         r,
         0,
         0,
         screenY,
         true,
-        this._grid.leftHeaderWidth,
+        grid.leftHeaderWidth,
         currentCellHeight,
       );
     }
-    this._grid._ctx.restore();
+    ctx.restore();
 
     // Top left corner rectangle
-    this._grid._paintEngine.drawCell(
+    grid._paintEngine.drawCell(
       0,
       0,
       0,
       0,
       true,
-      this._grid.leftHeaderWidth,
-      this._grid.topHeaderHeight,
+      grid.leftHeaderWidth,
+      grid.topHeaderHeight,
     );
 
     this.renderSelection();
@@ -157,23 +167,25 @@ export class RenderingEngine {
   // =============================================
 // get the type of the selection
   renderSelection(): void {
-    const selection = this._grid._selection;
     const dataStartRow = Math.max(1, this._startRow);
     const dataStartCol = Math.max(1, this._startCol);
 
-    if (selection.mode === SelectionMode.COLUMN) {
-      this.renderColumnSelection(dataStartCol);
-    } else if (selection.mode === SelectionMode.ROW) {
-      this.renderRowSelection(dataStartRow);
-    } else if (selection.mode === SelectionMode.CELL) {
-      this.renderCellSelection(dataStartRow, dataStartCol);
-    }
+      if(
+        this._grid._selection.anchorCol !== null && this._grid._selection.focusCol !== null
+        && this._grid._selection.anchorRow !== null && this._grid._selection.focusRow !== null
+      ){
+        this.renderCellSelection(dataStartRow, dataStartCol);
+      }
+      else {
+        this.renderColumnSelection(dataStartCol);
+        this.renderRowSelection(dataStartRow);
+      }
   }
 
   private renderColumnSelection(dataStartCol: number): void {
     const colRange = this._grid._selection.colRange;
     if (colRange === null ) return;
-
+    
     // start boundary  
     const visibleStart = Math.max(dataStartCol, colRange[0]);
     
@@ -287,8 +299,6 @@ export class RenderingEngine {
 
     this._grid._ctx.restore();
 
-    if (this._grid._selection.mode === SelectionMode.CELL && this._grid._selection.isCellSelected(row, col)) {
-      this._grid._paintEngine.drawSelected(rect.x, rect.y, rect.width, rect.height, false);
-    }
+    this._grid._paintEngine.drawSelected(rect.x, rect.y, rect.width, rect.height, false);
   }
 }

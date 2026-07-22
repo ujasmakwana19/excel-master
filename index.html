@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -164,6 +164,9 @@
             left: 0;
             display: block;
         }
+        canvas:focus {
+            outline: none;
+        }
 
        
         .app-footer {
@@ -198,19 +201,38 @@
                         <label for="font-family">Font</label>
                         <select id="font-family">
                             <option value="Arial">Arial</option>
+                            <option value="Arial Black">Arial Black</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Tahoma">Tahoma</option>
+                            <option value="Trebuchet MS">Trebuchet MS</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
                             <option value="Courier New">Courier New</option>
+                            <option value="Comic Sans MS">Comic Sans MS</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Lucida Console">Lucida Console</option>
+                            <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                            <option value="Palatino Linotype">Palatino Linotype</option>
+                            <option value="Garamond">Garamond</option>
+                            <option value="Segoe UI">Segoe UI</option>
+                            <option value="Jokerman">Jokerman</option>
+                            <option value="sans-serif">sans-serif</option>
+                            <option value="serif">serif</option>
+                            <option value="monospace">monospace</option>
+                            <option value="cursive">cursive</option>
+                            <option value="fantasy">fantasy</option>
                         </select>
                     </div>
                     <div class="field">
                         <label for="font-size">Size</label>
-                        <input type="number" id="font-size" value="14" min="10" max="30">
+                        <input type="number" id="font-size" value="14" min="10" max="70 ">
                     </div>
                 </div>
 
                 <div class="ctrl-group">
                     <div class="field">
                         <label for="font-color">Font Color</label>
-                        <input type="color" id="font-color" value="#000000" title="Font Color">
+                        <input type="color" id="font-color" value="#202124" title="Font Color">
                     </div>
                     <div class="field">
                         <label for="bg-color">Background Color</label>
@@ -244,7 +266,7 @@
         </nav>
 
         <main class="app-content" id="canvas-container">
-            <canvas id="myCanvas"></canvas>
+            <canvas id="myCanvas" tabindex="0"></canvas>
         </main>
 
         <footer class="app-footer">

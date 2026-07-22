@@ -1,8 +1,8 @@
-import { Defaults, GridConstants, HeaderConstants } from "../Grid/constants.js";
+import { Defaults, GridConstants, HeaderConstants } from "../GridUtils/constants.js";
 import {
 	DefaultGridProperties,
 	type PaintProperties,
-} from "../Grid/PaintProperties.js";
+} from "../GridUtils/PaintProperties.js";
 
 export type RowData = {
 	[key: number]: {
@@ -66,4 +66,23 @@ export class Row {
 
 		return ((remainingRows * GridConstants.HEIGHT) + sum + HeaderConstants.TOPHEIGHT);
 	}
+
+	calculateHeightUptoY(rowIndex : number): number {
+        if (rowIndex <= 1) return 0;
+
+        let customSum = 0;
+        let customCount = 0;
+
+        for (const key in this._rowDataCache) {
+            const c = Number(key);
+            if (c < rowIndex) {
+                customSum += this._rowDataCache[c]?.height ?? 0;
+                customCount++;
+            }
+        }
+
+        const defaultRows = (rowIndex - 1) - customCount;
+
+        return customSum + Math.max(0, defaultRows) * GridConstants.HEIGHT;
+    }
 }

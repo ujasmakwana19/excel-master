@@ -1,16 +1,16 @@
-import { CanvasMaths } from "./CanvasMaths.js";
-import { Defaults, GridConstants, HeaderConstants } from "./Grid/constants.js";
-import { SelectionManager } from "./EventListener/SelectionManager.js";
-import { MouseScrollEventOpertion } from "./EventListener/MouseScrollEvent.js";
-import { ResizeRowColumnEvent } from "./EventListener/ResizeRowColumnEvent.js";
+import { CanvasMaths } from "./GridUtils/CanvasMaths.js";
+import { Defaults, GridConstants, HeaderConstants } from "./GridUtils/constants.js";
+import { CanvasScrollEventOpertion } from "./EventListener/CanvasScrollEvent.js";
 import { Cell } from "./DB/cell.js";
 import { Column } from "./DB/column.js";
 import { Row } from "./DB/row.js";
 import { PaintEngine } from "./PaintEngine.js";
 import { RenderingEngine } from "./RenderingEngine.js";
-import { SelectionState } from "./Grid/SelectionState.js";
+import { SelectionState } from "./GridUtils/SelectionState.js";
 import { HistoryManager } from "./HistoryManager.js";
 import { CellEditor } from "./Cell/CellEditor.js";
+import { PointerEventManager } from "./EventListener/PointerEventManager.js";
+import { KeyEventManager } from "./EventListener/KeyEventManager.js";
 
 export class Grid {
   _canvas: HTMLCanvasElement;
@@ -20,9 +20,9 @@ export class Grid {
   _renderingEngine: RenderingEngine;
 
   // Events
-  _mouseEventScroll: MouseScrollEventOpertion;
-  _resizeEvent: ResizeRowColumnEvent;
-  _selectionManager: SelectionManager;
+  _canvasScroll: CanvasScrollEventOpertion;
+  _pointerEventManager : PointerEventManager
+  _keyboardEventManager : KeyEventManager
 
   // Grid Paint
   _paintEngine: PaintEngine;
@@ -80,13 +80,12 @@ export class Grid {
 
     this._renderingEngine = new RenderingEngine(this);
 
-    this._resizeEvent = new ResizeRowColumnEvent(this);
-    this._mouseEventScroll = new MouseScrollEventOpertion();
-    this._selectionManager = new SelectionManager(this);
+    this._canvasScroll = new CanvasScrollEventOpertion();
+    this._pointerEventManager = new PointerEventManager(this)
+    this._keyboardEventManager = new KeyEventManager(this)
 
     this._historyManager = new HistoryManager();
     this._cellEditor = new CellEditor(this);
-
     this.drawInitGrid();
   }
 
@@ -98,36 +97,10 @@ export class Grid {
     // Grid Render on scroll
     window.addEventListener(
       "wheel",
-      (e) => this._mouseEventScroll.handleWheel(e, this),
+      (e) => this._canvasScroll.handleWheel(e, this),
       { passive: false },
     );
 
-    // mouse move
-    this._canvas.addEventListener("mousemove", (e) =>
-      this._resizeEvent.handleMouseMove(
-        this._canvas,
-        this,
-        this._renderingEngine,
-        e,
-      ),
-    );
-
-    // mouse down
-    this._canvas.addEventListener("mousedown", (e) => {
-      
-      // mouse down for the resize event
-      this._resizeEvent.handleMouseDown(e);
-        
-      if (!this._resizeEvent.isResizing) {
-        this._selectionManager.handleMouseDown(e);
-      }
-    });
-
-    // mouse released
-    window.addEventListener("mouseup", () => this._resizeEvent.handleMouseUp());
-
-    // While a cell is actively being edited, so the browser's own
-    // native text-input undo (editing keystrokes) takes precedence there.
     window.addEventListener("keydown", (e) => {
       if (this._cellEditor.isEditing) return;
       if (!(e.ctrlKey || e.metaKey)) return;
