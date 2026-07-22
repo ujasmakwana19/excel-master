@@ -1,4 +1,4 @@
-import type { Cell, CellValue } from "../DB/cell.js";
+import type { Cell, CellValue } from "../States/cell.js";
 
 
 export interface Command {

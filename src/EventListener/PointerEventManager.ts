@@ -1,5 +1,5 @@
 import type { Grid } from "../Grid.js"
-import { AutoScroll } from "./AutoScroll.js"
+import { AutoScroll } from "./DragAutoScroll.js"
 import { CellEventHandler } from "../PointerEventHandler/CellEvent.js"
 import { ColumnEventHandler } from "../PointerEventHandler/ColumnEvent.js"
 import { cursorShape } from "../PointerEventHandler/DynamicGraphicsHandler.js"

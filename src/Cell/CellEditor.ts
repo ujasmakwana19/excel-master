@@ -1,5 +1,5 @@
 import { SetCellCommand } from "../GridUtils/Commands.js";
-import type { CellValue } from "../DB/cell.js";
+import type { CellValue } from "../States/cell.js";
 import type { Grid } from "../Grid.js";
 import { setInputFieldProps, setOnEditCellProps } from "./InputField.js";
 
